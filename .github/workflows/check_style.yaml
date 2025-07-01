@@ -1,0 +1,25 @@
+name: PEP8 Style Check
+
+on: [push, pull_request]
+
+jobs:
+  style-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧾 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install flake8
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+
+      - name: ✅ Run flake8 style check
+        run: |
+          echo "Running PEP8 checks with flake8..."
+          flake8 . --max-line-length=100
