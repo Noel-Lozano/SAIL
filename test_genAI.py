@@ -2,8 +2,8 @@ import unittest
 from unittest.mock import patch, MagicMock
 from genAI_api import generate_itinerary, build_prompt
 
-class TestAIGenerator(unittest.TestCase):
 
+class TestAIGenerator(unittest.TestCase):
 
     @patch("genAI_api.genai.GenerativeModel")
     def test_generate_itinerary_success(self, mock_model_class):
@@ -23,7 +23,6 @@ class TestAIGenerator(unittest.TestCase):
         mock_model.generate_content.assert_called_once()
         print("test_generate_itinerary_success Passed")
 
-
     @patch("genAI_api.genai.GenerativeModel")
     def test_generate_itinerary_failure(self, mock_model_class):
         """Test itinerary generation failure due to API error."""
@@ -41,7 +40,6 @@ class TestAIGenerator(unittest.TestCase):
         self.assertEqual(result, "Sorry, something went wrong while generating your itinerary.")
         print("test_generate_itinerary_failure Passed")
 
-
     def test_build_prompt(self):
         """Test building a prompt."""
         prompt = build_prompt("Rome", "2025-09-01", "75", "cloudy")
@@ -51,6 +49,7 @@ class TestAIGenerator(unittest.TestCase):
         self.assertIn("75", prompt)
         self.assertNotIn("100", prompt)
         print("test_build_prompt Passed")
+
 
 if __name__ == "__main__":
     unittest.main()
