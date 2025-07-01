@@ -32,5 +32,5 @@ def generate_itinerary(destination, date, budget, weather):
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        print(f"[ERROR] Failed to generate itinerary: {e}")
+        # print(f"[ERROR] Failed to generate itinerary: {e}")
         return "Sorry, something went wrong while generating your itinerary."
