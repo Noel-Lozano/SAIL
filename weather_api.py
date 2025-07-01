@@ -5,7 +5,7 @@ import requests
 
 load_dotenv()
 
-print(os.getenv("WEATHER_API"))
+
 WEATHER_API = os.getenv("WEATHER_API")
 
 
@@ -27,7 +27,9 @@ def get_weather(city, target_date):
         for item in data["list"]:
             if item["dt_txt"].startswith(target_date):
                 return {
+                    "city": data["city"]["name"],
                     "date": target_date,
                     "temperature": item["main"]["temp"],
-                }
+              
     return {"error": "Weather data not found"}
+
