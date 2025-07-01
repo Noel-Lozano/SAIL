@@ -1,7 +1,7 @@
 import unittest
 import sqlalchemy as db
-import pandas as pd
 from db_utils import save_search, get_search_history, clear_search_history
+
 
 class TestDatabaseUtils(unittest.TestCase):
     def setUp(self):
@@ -20,7 +20,6 @@ class TestDatabaseUtils(unittest.TestCase):
                 );
             """))
 
-
     def test_save_and_retrieve(self):
         """ Test saving a search entry to the database. """
         entry = {
@@ -33,14 +32,13 @@ class TestDatabaseUtils(unittest.TestCase):
 
         save_search(entry, engine=self.engine)
         result = get_search_history(engine=self.engine)
-        
+
         self.assertEqual(len(result), 1)
         self.assertEqual(result.iloc[0]['city'], "Barcelona")
         self.assertEqual(result.iloc[0]['date'], "2025-08-10")
         self.assertEqual(result.iloc[0]['budget'], "1200")
         self.assertIn('Sagrada Familia', result.iloc[0]['itinerary'])
         print("Save and retrieve test passed successfully.")
-
 
     def test_clear_search_history(self):
         """ Test clearing the search history. """
