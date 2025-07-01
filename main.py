@@ -29,12 +29,14 @@ def display_search_history():
 
 def clear_history():
     """ Clears the search history after user confirmation. """
-    confirm = input("\nAre you sure you want to clear the search history? (yes/no): ").strip().lower()
+    confirm = input("\nAre you sure you want to clear the search history? (yes/no): ")
+    confirm = confirm.strip().lower()
     if confirm == 'yes':
         clear_search_history()
         print("Search history cleared.")
     else:
         print("Search history not cleared.")
+
 
 def saving_search(city, date, budget, weather, itinerary):
     """ Saves the search entry to the database. """
@@ -50,21 +52,10 @@ def saving_search(city, date, budget, weather, itinerary):
     print("Search saved successfully.")
 
 
-
 def main():
     exit_program = False
     print("\nWelcome to TravelBot, the Travel Itinerary Generator!")
-    print("This program will help you plan your trip by generating a personalized itinerary based on your preferences.")
-
-
-    # # Testing Weather (not working rn)
-    # city = input("Enter the city you want to visit: ").strip()
-    # date = input("Enter the date of your visit (YYYY-MM-DD): ").strip()
-
-    # print("\nFetching weather information...")
-    # weather = get_weather(city, date)
-    # print(f"Weather in {city} on {date}: {weather}")
-    
+    print("You can generate personalized itineraries based on your preferences.")
 
     while not exit_program:
         print("\nMenu:")
@@ -91,7 +82,6 @@ def main():
             print("Thank you for using TravelBot. Goodbye!")
         else:
             print("Invalid option. Please try again.")
-    
 
 
 if __name__ == "__main__":

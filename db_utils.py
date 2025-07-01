@@ -18,7 +18,7 @@ def get_search_history(engine=DEFAULT_ENGINE):
         result = conn.execute(db.text(f"SELECT * FROM {TABLE_NAME};")).fetchall()
         columns = ['city', 'date', 'budget', 'weather', 'itinerary']
         return pd.DataFrame(result, columns=columns)
-    
+
 
 def clear_search_history(engine=DEFAULT_ENGINE):
     """ Deletes all entries in the search history table. """
