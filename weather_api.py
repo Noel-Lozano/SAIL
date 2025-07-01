@@ -28,6 +28,7 @@ def get_weather(city, target_date):
             if item["dt_txt"].startswith(target_date):
                 return {
                     "temperature": item["main"]["temp"],
+                    "description": item["weather"][0]["description"],
                 }
                
     return {"error": "Weather data not found"}
