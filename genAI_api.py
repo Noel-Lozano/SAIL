@@ -8,14 +8,20 @@ if not GEMINI_KEY:
 genai.configure(api_key=GEMINI_KEY)
 
 
-def build_prompt(destination, date, budget, weather):
+def build_prompt(destination, date, budget, weather, interests=None):
     """Builds a prompt for the Gemini model based on user input."""
     prompt = f"""
         You are a smart travel planner.
         Create a personalized day itinerary for a user visiting {destination} on {date}.
         The weather is expected to be {weather}.
         The budget for the day is {budget} (in USD).
+        """
+    if interests:
+        prompt += f"""The user's interests include: {interests}."""
+    else:
+        prompt += "The user has no specific interests."
 
+        prompt += """
         Give me a schedule with time blocks (e.g., 9am–11am), and briefly describe each activity.
         Ensure it fits the weather and budget.
         Return the plan in a clean, readable format.
@@ -23,9 +29,9 @@ def build_prompt(destination, date, budget, weather):
     return prompt.strip()
 
 
-def generate_itinerary(destination, date, budget, weather):
+def generate_itinerary(destination, date, budget, weather, interests):
     """Generates a travel itinerary using the Gemini model."""
-    prompt = build_prompt(destination, date, budget, weather)
+    prompt = build_prompt(destination, date, budget, weather, interests)
 
     try:
         model = genai.GenerativeModel('gemini-1.5-flash')

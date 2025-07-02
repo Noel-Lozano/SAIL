@@ -8,9 +8,11 @@ def make_itinerary():
     city = input("Enter the city: ").strip()
     date = input("Enter the date (YYYY-MM-DD): ").strip()
     budget = input("Enter your budget: ").strip()
+    interests = input("Enter your interests (e.g., museums, food, hiking), or press Enter to skip: ").strip()
+
 
     weather = get_weather(city, date)
-    itinerary = generate_itinerary(city, date, budget, weather)
+    itinerary = generate_itinerary(city, date, budget, weather, interests)
 
     print("\nGenerated Itinerary:")
     print(itinerary)
