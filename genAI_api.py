@@ -31,6 +31,7 @@ def generate_itinerary(destination, date, budget, weather):
         model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(prompt)
         return response.text
-    except Exception as e:
-        print(f"[ERROR] Failed to generate itinerary: {e}")
+    # except Exception as e:
+        # print(f"[ERROR] Failed to generate itinerary: {e}")
+    except Exception:
         return "Sorry, something went wrong while generating your itinerary."
