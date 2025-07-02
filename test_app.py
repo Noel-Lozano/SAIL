@@ -26,17 +26,18 @@ def test_get_weather_success(mock_get):
 
 
 def test_build_prompt_contains_all_inputs():
-    prompt = build_prompt("Tokyo", "2025-07-05", 150, "sunny and warm")
+    prompt = build_prompt("Tokyo", "2025-07-05", 150, "sunny and warm", "museums")
     assert "Tokyo" in prompt
     assert "2025-07-05" in prompt
     assert "150" in prompt
     assert "sunny and warm" in prompt
+    assert "museums" in prompt
 
 
 @patch("genAI_api.genai.GenerativeModel.generate_content")
 def test_generate_itinerary_returns_string(mock_generate):
     mock_generate.return_value.text = "Your itinerary for Tokyo..."
-    response = generate_itinerary("Tokyo", "2025-07-05", 150, "sunny")
+    response = generate_itinerary("Tokyo", "2025-07-05", 150, "sunny", "museums")
     assert isinstance(response, str)
     assert "Tokyo" in response or "itinerary" in response
 
