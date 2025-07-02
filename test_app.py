@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from weather_api import get_weather
 from genAI_api import build_prompt, generate_itinerary
@@ -6,7 +5,6 @@ from db_utils import (
     save_search,
     get_search_history,
     clear_search_history,
-    DEFAULT_ENGINE
 )
 
 
