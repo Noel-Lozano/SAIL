@@ -16,7 +16,8 @@ class TestAIGenerator(unittest.TestCase):
             destination="Paris",
             date="2025-08-15",
             budget="100",
-            weather="sunny"
+            weather="sunny",
+            interests="museums"
         )
 
         self.assertIn("Visit the Louvre", result)
@@ -34,7 +35,8 @@ class TestAIGenerator(unittest.TestCase):
             destination="Paris",
             date="2025-08-15",
             budget="100",
-            weather="sunny"
+            weather="sunny",
+            interests="museums"
         )
 
         self.assertEqual(result, "Sorry, something went wrong while generating your itinerary.")
