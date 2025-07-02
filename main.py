@@ -29,7 +29,8 @@ def display_search_history():
 
 def clear_history():
     """ Clears the search history after user confirmation. """
-    confirm = input("\nAre you sure you want to clear the search history? (yes/no): ")
+    confirm = input(
+        "\nAre you sure you want to clear the search history? (yes/no): ")
     confirm = confirm.strip().lower()
     if confirm == 'yes':
         clear_search_history()
@@ -68,7 +69,8 @@ def main():
 
         if choice == '1':
             city, date, budget, weather, itinerary = make_itinerary()
-            save_option = input("Would you like to save this search? (yes/no): ").strip().lower()
+            save_option = input(
+                "Would you like to save this search? (yes/no): ").strip().lower()
             if save_option == 'yes':
                 saving_search(city, date, budget, weather, itinerary)
             else:

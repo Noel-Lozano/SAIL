@@ -4,8 +4,9 @@ from db_utils import save_search, get_search_history, clear_search_history
 
 
 class TestDatabaseUtils(unittest.TestCase):
+
     def setUp(self):
-        """ Create a new in-memory SQLite database for each test. """
+        """Create a new in-memory SQLite database for each test."""
         self.engine = db.create_engine('sqlite:///:memory:')
         self.table_name = 'user_searches'
 
@@ -21,7 +22,7 @@ class TestDatabaseUtils(unittest.TestCase):
             """))
 
     def test_save_and_retrieve(self):
-        """ Test saving a search entry to the database. """
+        """Test saving a search entry to the database."""
         entry = {
             'city': 'Barcelona',
             'date': '2025-08-10',
@@ -41,7 +42,7 @@ class TestDatabaseUtils(unittest.TestCase):
         print("Save and retrieve test passed successfully.")
 
     def test_clear_search_history(self):
-        """ Test clearing the search history. """
+        """Test clearing the search history."""
         entry1 = {
             'city': 'Madrid',
             'date': '2025-08-11',
