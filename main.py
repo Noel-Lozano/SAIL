@@ -1,6 +1,6 @@
 from weather_api import get_weather
 from genAI_api import generate_itinerary
-from db_utils import save_search, get_search_history, clear_search_history
+from db_utils import save_search, view_search_history, clear_search_history
 
 
 def make_itinerary():
@@ -20,7 +20,7 @@ def make_itinerary():
 def display_search_history():
     """ Displays the search history from the database. """
     print("\nSearch History:")
-    history = get_search_history()
+    history = view_search_history()
     if history.empty:
         print("No search history found.")
     else:
@@ -74,7 +74,7 @@ def main():
             else:
                 print("Search not saved.")
         elif choice == '2':
-            display_search_history()
+            view_search_history()
         elif choice == '3':
             clear_history()
         elif choice == '4':
