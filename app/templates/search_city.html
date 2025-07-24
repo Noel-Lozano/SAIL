@@ -1,17 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Your Itinerary Map</title>
+    <title>Places to Visit</title>
     <style>
         #map { height: 500px; width: 100%; }
     </style>
 </head>
 <body>
-    <h2>Your Itinerary for {{ request.args.city }}</h2>
-    <p>{{ itinerary }}</p>
+    <h2>Places to Visit for {{ city }}</h2>
     <div id="map"></div>
 
-    <pre>{{ places | tojson | safe }}</pre>
+    <form action="/test-search" method="get">
+        <input type="text" name="city" placeholder="Enter city" value="{{ city }}">
+        <button type="submit">Search</button>
+    </form>
+
+    <ul>
+        {% for place in places %}
+            <li>{{ place.name }} - {{ place.address }}</li>
+        {% endfor %}
+    </ul>
 
     <script>
         const locationsData = {{ places | tojson | safe }};

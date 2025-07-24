@@ -24,6 +24,23 @@ def extract_from_itinerary(iti_txt):
                 places.append(place)
     return places
 
+def process_result(result):
+    """
+    Processes a single result from Google Places API.
+    Returns a dictionary with name, address, coordinates, and Google Maps URL.
+    """
+    geometry = result.get("geometry", {}).get("location", {})
+    return {
+        "name": result.get("name"),
+        "address": result.get("formatted_address"),
+        "location": {
+            "lat": geometry.get("lat"),
+            "lng": geometry.get("lng")
+        },
+        "rating": result.get("rating"),
+        "user_ratings_total": result.get("user_ratings_total"),
+        "place_id": result.get("place_id")
+    }
 
 def get_place_details(place_name, city):
     """
@@ -49,19 +66,8 @@ def get_place_details(place_name, city):
         
         if response.status_code == 200 and data.get("status") == "OK" and data.get("results"):
             place = data["results"][0]
-            geometry = place.get("geometry", {}).get("location", {})
-            
-            return {
-                "name": place.get("name"),
-                "address": place.get("formatted_address"),
-                "location": {
-                    "lat": geometry.get("lat"),
-                    "lng": geometry.get("lng")
-                },
-                "rating": place.get("rating"),
-                "user_ratings_total": place.get("user_ratings_total"),
-                "place_id": place.get("place_id")
-            }
+            return process_result(place)
+
         else:
             print(f"DEBUG: API Error - Status: {data.get('status')}, Message: {data.get('error_message')}")
             
@@ -84,3 +90,28 @@ def get_places_from_itinerary(itinerary, city):
                 places.append(place_details)
     
     return places
+
+def get_places_from_city(city):
+    """
+    Retrieves a list of attractions in a given city using Google Places API.
+    """
+    url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
+    params = {
+        "query": f"Things to do in {city}",
+        "key": BACKEND_MAP_API
+    }
+    
+    try:
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        if response.status_code == 200 and data.get("status") == "OK":
+            places = [process_result(place) for place in data.get("results", [])]
+            return places
+        else:
+            print(f"DEBUG: API Error - Status: {data.get('status')}, Message: {data.get('error_message')}")
+    
+    except Exception as e:
+        print(f"DEBUG: Exception occurred: {e}")
+    
+    return []
