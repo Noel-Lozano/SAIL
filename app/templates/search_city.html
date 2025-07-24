@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Places to Visit</title>
+    <style>
+        #map { height: 500px; width: 100%; }
+    </style>
+</head>
+<body>
+    <h2>Places to Visit for {{ city }}</h2>
+    <div id="map"></div>
+
+    <form action="/test-search" method="get">
+        <input type="text" name="city" placeholder="Enter city" value="{{ city }}">
+        <button type="submit">Search</button>
+    </form>
+
+    <ul>
+        {% for place in places %}
+            <li>{{ place.name }} - {{ place.address }}</li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        const locationsData = {{ places | tojson | safe }};
+    </script>
+    <script>
+        let map;
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), { zoom: 12, gestureHandling: 'greedy' });
+            const bounds = new google.maps.LatLngBounds();
+
+            const locations = locationsData
+            locations.forEach(loc => {
+                if (loc && loc.location) {
+                    const marker = new google.maps.Marker({
+                        position: { lat: loc.location.lat, lng: loc.location.lng },
+                        map: map,
+                        title: loc.name
+                    });
+
+                    const infowindow = new google.maps.InfoWindow({
+                        content: `<strong>${loc.name}</strong><br>${loc.address}`
+                    });
+                    marker.addListener("click", () => infowindow.open(map, marker));
+
+                    bounds.extend(marker.getPosition());
+                }
+            });
+
+            if (locations.length > 0) {
+                map.fitBounds(bounds);
+            } else {
+            // Set default location if no places found
+            map.setCenter({lat: 40.7128, lng: -74.0060}); // Default to NYC
+            map.setZoom(12);
+            }
+        }
+    </script>
+    <script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap"></script>
+</body>
+</html>

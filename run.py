@@ -1,10 +1,11 @@
-from weather_api import get_weather
-from genAI_api import generate_itinerary
-from db_utils import save_search, view_search_history, clear_search_history
+"""
+from app.api.weather_api import get_weather
+from app.api.genAI_api import generate_itinerary
+from app.models.db_utils import save_search, view_search_history, clear_search_history
 
 
 def make_itinerary():
-    """ Collects user input for itinerary generation and displays the result. """
+     Collects user input for itinerary generation and displays the result. 
     city = input("Enter the city: ").strip()
     date = input("Enter the date (YYYY-MM-DD): ").strip()
     budget = input("Enter your budget: ").strip()
@@ -20,7 +21,7 @@ def make_itinerary():
 
 
 def display_search_history():
-    """ Displays the search history from the database. """
+     Displays the search history from the database. 
     print("\nSearch History:")
     history = view_search_history()
     if history.empty:
@@ -30,7 +31,7 @@ def display_search_history():
 
 
 def clear_history():
-    """ Clears the search history after user confirmation. """
+    Clears the search history after user confirmation. 
     confirm = input(
         "\nAre you sure you want to clear the search history? (yes/no): ")
     confirm = confirm.strip().lower()
@@ -42,7 +43,7 @@ def clear_history():
 
 
 def saving_search(city, date, budget, weather, itinerary):
-    """ Saves the search entry to the database. """
+    Saves the search entry to the database.
     print("\nSaving your search...")
     entry = {
         "city": city,
@@ -87,6 +88,13 @@ def main():
         else:
             print("Invalid option. Please try again.")
 
+"""
+
+from app import create_app
+app = create_app()
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)
+
+
+
