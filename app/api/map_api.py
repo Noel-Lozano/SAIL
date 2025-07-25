@@ -70,18 +70,21 @@ def process_result(result):
     
 cache = {}
 
-def get_places_from_city(city, page_n = 1):
+def get_places_from_city(city, place, page_n = 1):
     # check cache first
 
+    identifier = f"{city}_{place}"
+    print(f"DEBUG: Identifier for cache: {identifier}")
     pageToken = None
-    if city in cache and page_n < cache[city]["next_page"]:
-        return cache[city]["pages"][page_n]
+    if identifier in cache and page_n < cache[identifier]["next_page"]:
+        print("DEBUG: Cache hit for identifier:", identifier)
+        return cache[identifier]["pages"][page_n]
     else:
-        if city in cache and page_n == cache[city]["next_page"] and cache[city]["next_page_token"]:
-            cache[city]["next_page"] += 1
-            pageToken = cache[city]["next_page_token"]
-        elif city not in cache:
-            cache[city] = {
+        if identifier in cache and page_n == cache[identifier]["next_page"] and cache[identifier]["next_page_token"]:
+            cache[identifier]["next_page"] += 1
+            pageToken = cache[identifier]["next_page_token"]
+        elif identifier not in cache:
+            cache[identifier] = {
                 "next_page": 2,
                 "pages": {}
             }
@@ -93,6 +96,8 @@ def get_places_from_city(city, page_n = 1):
     payload = {
         "textQuery": f"Things to do in {city}"
     }
+    if place:
+        payload["textQuery"] = f"{place} in {city}"
     if pageToken:
         payload["pageToken"] = pageToken
     headers = {
@@ -107,9 +112,9 @@ def get_places_from_city(city, page_n = 1):
         
         if response.status_code == 200:
             places = [process_result(place) for place in data.get("places", [])]
-            cache[city]["pages"][page_n] = places
-            cache[city]["next_page_token"] = data.get("nextPageToken", None)
-            print("pagenexttoken", cache[city]["next_page_token"])
+            cache[identifier]["pages"][page_n] = places
+            cache[identifier]["next_page_token"] = data.get("nextPageToken", None)
+            print("pagenexttoken", cache[identifier]["next_page_token"])
             return places
         else:
             print(f"DEBUG: API Error - Status: {data.get('status')}, Message: {data.get('error_message')}")
