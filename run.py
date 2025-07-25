@@ -5,8 +5,8 @@ from app.models.db_utils import create_user, validate_user_login, save_search, g
 from datetime import timedelta
 import os
 
-app = Flask(__name__, template_folder='app/templates')
-app.secret_key = os.getenv("SECRET_KEY") 
+from app import create_app
+app = create_app()
 
 # Config
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///travelbot.db'
