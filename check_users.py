@@ -1,5 +1,5 @@
 # Just a simple script to check registered users in the database
-from app.backend.models.models import db, User
+from app.models.models import db, User
 from flask import Flask
 
 app = Flask(__name__)
