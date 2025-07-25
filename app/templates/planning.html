@@ -13,7 +13,7 @@
             <input type="text" name="place" placeholder="Enter place (optional)" value="{{ place }}">
             <button type="submit">Search</button>
         </form>
-        <a href="/saved_places" class="btn-success">View My Saved Places</a>
+        <a href="/itinerary" class="btn-success">View My Itinerary</a>
     </div>
     
     <div id="map" style="height: 500px; width: 100%; margin-bottom: 20px; border: 2px solid #ddd;"></div>
@@ -27,43 +27,44 @@
                     <div class="place-name">{{ place.name }}</div>
                     <div class="place-address">{{ place.address }}</div>
                 </div>
-                <button class="save-btn" onclick="savePlace('{{ place.name }}', '{{ place.address }}', '{{ city }}', '{{ place.country or 'Unknown' }}', {{ place.location.lat }}, {{ place.location.lng }}, this)" title="Save place">
-                    ⭐
-                </button>
+                <button class="save-btn"
+                        data-place='{{ {
+                            "id": place.place_id,
+                            "name": place.name,
+                            "address": place.address,
+                            "city": city,
+                            "latitude": place.location.lat,
+                            "longitude": place.location.lng,
+                            "editorial_summary": place.editorial_summary
+                        } | tojson }}'
+                        onclick="savePlace(this)"
+                        title="Save place">⭐</button>
             </div>
         {% endfor %}
     </div>
 
-    <script>    
-        function savePlace(name, address, city, country, lat, lng, buttonElement) {
-            // Disable button to prevent double-clicking
+
+    <script>
+        function savePlace(buttonElement) {
+            const place = JSON.parse(buttonElement.dataset.place);
+
             buttonElement.disabled = true;
             buttonElement.style.opacity = '0.5';
-            
+
             fetch('/save_place', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    name: name, 
-                    address: address, 
-                    city: city, 
-                    country: country,
-                    latitude: lat, 
-                    longitude: lng 
-                })
+                body: JSON.stringify(place)
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 if (data.message) {
-                    // Change star color to indicate saved
                     buttonElement.classList.add('saved');
                     buttonElement.title = 'Place saved!';
-                    
-                    // Show brief success message
-                    const originalText = buttonElement.innerHTML;
+                    const original = buttonElement.innerHTML;
                     buttonElement.innerHTML = '✅';
                     setTimeout(() => {
-                        buttonElement.innerHTML = originalText;
+                        buttonElement.innerHTML = original;
                     }, 1000);
                 } else {
                     alert(data.error || 'Error saving place');
@@ -74,7 +75,6 @@
                 alert('Error saving place');
             })
             .finally(() => {
-                // Re-enable button
                 buttonElement.disabled = false;
                 buttonElement.style.opacity = '1';
             });
