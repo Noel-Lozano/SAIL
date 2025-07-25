@@ -1,55 +1,37 @@
-import pandas as pd
-import sqlalchemy as db
+from .models import db, User, Search
+from werkzeug.security import generate_password_hash, check_password_hash
 
-DB_NAME = 'search_history.db'
-TABLE_NAME = 'user_searches'
-DEFAULT_ENGINE = db.create_engine(f'sqlite:///{DB_NAME}')
+def create_user(username, email, password):
+    hashed = generate_password_hash(password)
+    user = User(username=username, email=email, hashed_password=hashed)
+    db.session.add(user)
+    db.session.commit()
+    return user
 
+def get_user_by_email(email):
+    return User.query.filter_by(email=email).first()
 
-def save_search(entry_dict, engine=DEFAULT_ENGINE):
-    """Takes a dictionary with search data and appends it to the database."""
-    df = pd.DataFrame([entry_dict])
-    df.to_sql(TABLE_NAME, con=engine, if_exists='append', index=False)
+def validate_user_login(email, password):
+    user = get_user_by_email(email)
+    if user and check_password_hash(user.hashed_password, password):
+        return user
+    return None
 
+def save_search(user_id, data):
+    search = Search(
+        user_id=user_id,
+        city=data['city'],
+        date=data['date'],
+        budget=data['budget'],
+        weather=data.get('weather'),
+        itinerary=data.get('itinerary')
+    )
+    db.session.add(search)
+    db.session.commit()
 
-def get_search_history(engine=DEFAULT_ENGINE):
-    """Returns all saved searches as a DataFrame."""
-    with engine.connect() as conn:
-        result = conn.execute(db.text(f"SELECT * FROM {TABLE_NAME};")).fetchall()
-        columns = ['city', 'date', 'budget', 'weather', 'itinerary']
-        return pd.DataFrame(result, columns=columns)
+def get_user_searches(user_id):
+    return Search.query.filter_by(user_id=user_id).order_by(Search.created_at.desc()).all()
 
-
-def clear_search_history(engine=DEFAULT_ENGINE):
-    """Deletes all entries in the search history table."""
-    with engine.begin() as conn:
-        conn.execute(db.text(f"DELETE FROM {TABLE_NAME};"))
-
-
-def view_search_history():
-    """Displays the search history in a user-friendly format."""
-    df = get_search_history()
-    if df.empty:
-        print("\nNo search history found.\n")
-        return
-
-    # Display summary list
-    print("\nSearch History:")
-    for idx, row in df.iterrows():
-        print(f"{idx + 1}. {row['city']} on {row['date']} (Budget: ${row['budget']})")
-
-    try:
-        selection = int(input("\nEnter number to view full itinerary (or 0 to cancel): "))
-        if selection == 0:
-            return
-        selected = df.iloc[selection - 1]
-        print("\nFull Details:")
-        print(f"City: {selected['city']}")
-        print(f"Date: {selected['date']}")
-        print(f"Budget: ${selected['budget']}")
-        print(f"Weather: {selected['weather']}")
-        print("\nItinerary:\n")
-        print(selected['itinerary'])
-
-    except (ValueError, IndexError):
-        print("Invalid selection. Please try again.")
+def clear_user_searches(user_id):
+    Search.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
