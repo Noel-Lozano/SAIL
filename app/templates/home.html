@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block title %}Search Dashboard{% endblock %}
+{% block content %}
+<h2>Welcome, {{ session.user }}!</h2>
+<p>Use the form below to save your travel searches.</p>
+
+<form method="POST" action="{{ url_for('search') }}">
+  <div class="mb-3">
+    <label>City</label>
+    <input name="city" class="form-control">
+  </div>
+  <div class="mb-3">
+    <label>Date</label>
+    <input name="date" class="form-control">
+  </div>
+  <div class="mb-3">
+    <label>Budget</label>
+    <input name="budget" class="form-control">
+  </div>
+  <button type="submit" class="btn btn-primary">Save Search</button>
+</form>
+{% endblock %}

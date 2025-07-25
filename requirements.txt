@@ -5,3 +5,7 @@ pytest
 flake8
 pandas
 sqlalchemy
+flask
+flask_sqlalchemy
+flask_jwt_extended
+werkzeug
