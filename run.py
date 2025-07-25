@@ -1,5 +1,4 @@
 from flask import render_template, request, redirect, session, flash, url_for, Flask
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from app.models.models import db, User, Search
 from app.models.db_utils import create_user, validate_user_login, save_search, get_user_searches, clear_user_searches
@@ -12,11 +11,8 @@ app.secret_key = os.getenv("SECRET_KEY")
 # Config
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///travelbot.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'your-secret-key'
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 
 db.init_app(app)
-jwt = JWTManager(app)
 
 with app.app_context():
     db.create_all()
