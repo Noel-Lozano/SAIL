@@ -10,8 +10,9 @@
     <h2>Places to Visit for {{ city }}</h2>
     <div id="map"></div>
 
-    <form action="/test-search" method="get">
+    <form action="/planning" method="get">
         <input type="text" name="city" placeholder="Enter city" value="{{ city }}">
+        <input type="text" name="place" placeholder="Enter place (optional)" value="{{ place }}">
         <button type="submit">Search</button>
     </form>
 
