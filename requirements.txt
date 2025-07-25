@@ -6,6 +6,6 @@ flake8
 pandas
 sqlalchemy
 flask
-flask_sqlalchemy
-flask_jwt_extended
+flask-sqlalchemy
+flask-jwt-extended
 werkzeug
