@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
 
@@ -8,7 +8,7 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     hashed_password = db.Column(db.String(128), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     searches = db.relationship('Search', backref='user', lazy=True)
 
 class Search(db.Model):
@@ -19,4 +19,16 @@ class Search(db.Model):
     budget = db.Column(db.Float, nullable=False)
     weather = db.Column(db.Text)
     itinerary = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
+class Place(db.Model):
+    id = db.Column(db.Integer, unique=True, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    city = db.Column(db.String(100), nullable=False)
+    country = db.Column(db.String(100), nullable=False)
+    address = db.Column(db.String(200), nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
