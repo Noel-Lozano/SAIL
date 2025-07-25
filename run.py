@@ -33,7 +33,7 @@ def register():
 
         create_user(username, email, password)
         flash("User registered successfully!", "success")
-        return redirect(url_for('login_page'))
+        return redirect(url_for('login'))
 
     return render_template('register.html')
 
