@@ -19,7 +19,7 @@ db.init_app(app)
 from app.models.models import Place
 
 with app.app_context():
-    Place.__table__.drop(db.engine)
+    # Place.__table__.drop(db.engine)
     db.create_all()
 
 # ROUTES

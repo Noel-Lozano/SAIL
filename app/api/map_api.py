@@ -1,11 +1,26 @@
+import json
 import os
 from dotenv import load_dotenv
 import requests
-import re
+import ast
+import populartimes
 
 load_dotenv()
 
 BACKEND_MAP_API = os.getenv("BACKEND_MAP_API")
+disabled = True # save API calls during development
+
+# [38, 64, 82, 90, 89, 81, 64, 41, 100, 100, 100, 100, 100, 100, 100] Statue of Liberty
+# [50, 69, 81, 86, 86, 86, 83, 81, 80, 79, 79, 76, 68, 52, 33] SUMMIT One Vanderbilt
+# [19, 30, 40, 50, 58, 64, 68, 73, 77, 83, 91, 97, 100, 92, 75] Times Square
+# [100, 34, 53, 72, 87, 97, 100, 94, 82, 67, 50, 34, 100, 100, 100] The Metropolitan Museum of Art
+
+def get_popularity(place_id):
+    if disabled:
+        print("DEBUG: Disabled mode is ON, returning dummy data.")
+        return [{'name': 'Monday', 'data': [27, 13, 6, 4, 3, 3, 4, 7, 11, 16, 21, 26, 30, 33, 35, 37, 39, 43, 47, 52, 55, 55, 47, 36]}, {'name': 'Tuesday', 'data': [20, 10, 5, 3, 3, 3, 5, 7, 11, 15, 21, 25, 29, 32, 34, 37, 42, 49, 56, 61, 64, 62, 53, 38]}, {'name': 'Wednesday', 'data': [21, 10, 5, 3, 3, 3, 5, 8, 12, 17, 24, 32, 38, 42, 44, 47, 50, 53, 57, 60, 63, 62, 54, 40]}, {'name': 'Thursday', 'data': [22, 11, 5, 3, 3, 3, 5, 8, 12, 18, 24, 30, 33, 36, 39, 43, 48, 54, 61, 67, 72, 71, 62, 47]}, {'name': 'Friday', 'data': [27, 13, 6, 4, 4, 4, 5, 8, 13, 19, 25, 31, 35, 39, 43, 48, 53, 59, 68, 76, 82, 84, 77, 62]}, {'name': 'Saturday', 'data': [37, 19, 9, 5, 4, 4, 4, 7, 12, 19, 30, 40, 50, 58, 64, 68, 73, 77, 83, 91, 97, 100, 92, 75]}, {'name': 'Sunday', 'data': [46, 24, 11, 6, 4, 3, 4, 6, 10, 17, 25, 34, 42, 49, 55, 60, 65, 67, 69, 70, 71, 69, 60, 46]}]
+    data = populartimes.get_id(BACKEND_MAP_API, place_id)
+    return data.get("populartimes", [])
 
 def process_result(result):
     """
@@ -22,6 +37,7 @@ def process_result(result):
     user_rating_count = result.get("userRatingCount", "No User Rating Count Provided")
     editorial_summary = result.get("editorialSummary", {}).get("text", "No Summary Provided")
     google_maps_uri = result.get("googleMapsUri", "No URI Provided")
+    open_hours = result.get("regularOpeningHours", {}).get("periods", [])
 
     return {
         "name": name,
@@ -31,47 +47,18 @@ def process_result(result):
         "rating": rating,
         "user_rating_count": user_rating_count,
         "editorial_summary": editorial_summary,
-        "google_maps_uri": google_maps_uri
+        "google_maps_uri": google_maps_uri,
+        "open_hours": open_hours
     }
 
-# def get_place_details(place_name, city):
-#     """
-#     Searches for a place using Google Places API and returns 
-#     name, address, coordinates, and a Google Maps URL.
-#     """
-#     url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
-    
-    
-#     query = f"{place_name} in {city}".strip()
-#     params = {
-#         "query": query,  # Use 'query' parameter instead of 'q'
-#         "key": BACKEND_MAP_API
-#     }
-    
-#     print(f"DEBUG: Query string: '{query}'")
-    
-#     try:
-#         response = requests.get(url, params=params)
-#         data = response.json()
-        
-#         print(f"DEBUG: Status: {response.status_code}, Response: {data}")
-        
-#         if response.status_code == 200 and data.get("status") == "OK" and data.get("results"):
-#             place = data["results"][0]
-#             return process_result(place)
-
-#         else:
-#             print(f"DEBUG: API Error - Status: {data.get('status')}, Message: {data.get('error_message')}")
-            
-#     except Exception as e:
-#         print(f"DEBUG: Exception occurred: {e}")
-    
-#     return None
-    
 cache = {}
 
 def get_places_from_city(city, place, page_n = 1):
-    # check cache first
+    if disabled:
+        print("DEBUG: Disabled mode is ON, returning dummy data.")
+        with open("app/api/new_york.txt", "r") as file:
+            data = ast.literal_eval(file.read())
+            return [process_result(place) for place in data.get("places", [])]
 
     identifier = f"{city}_{place}"
     print(f"DEBUG: Identifier for cache: {identifier}")
@@ -114,7 +101,6 @@ def get_places_from_city(city, place, page_n = 1):
             places = [process_result(place) for place in data.get("places", [])]
             cache[identifier]["pages"][page_n] = places
             cache[identifier]["next_page_token"] = data.get("nextPageToken", None)
-            print("pagenexttoken", cache[identifier]["next_page_token"])
             return places
         else:
             print(f"DEBUG: API Error - Status: {data.get('status')}, Message: {data.get('error_message')}")

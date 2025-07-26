@@ -9,3 +9,4 @@ flask
 flask-sqlalchemy
 flask-jwt-extended
 werkzeug
+git+https://github.com/m-wrzr/populartimes

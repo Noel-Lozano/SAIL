@@ -1,11 +1,11 @@
 import os
 from flask import render_template, request, Blueprint, jsonify, session
-from app.api.map_api import get_places_from_city
+from app.api.map_api import get_places_from_city, get_popularity
+from app.api.genAI_api import generate_groupings
 from app.models.db_utils import save_place, get_user_places, delete_place
 from app.models.models import Place
 from datetime import datetime
-
-
+import json
 
 map_display_bp = Blueprint('map_display', __name__)
 
@@ -24,13 +24,21 @@ def planning():
 def itinerary():
     if 'user_id' not in session:
         return render_template("login.html", message="Please log in to view your itinerary")
+    
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
 
     user_id = session['user_id']
     all_places = get_user_places(user_id=user_id)
+
+    if start_date and end_date:
+        generate_groupings(all_places, start_date, end_date)
     
     return render_template("itinerary.html",
                          places=all_places,
-                         total_places=len(all_places))
+                         total_places=len(all_places),
+                         start_date=start_date,
+                         end_date=end_date)
 
 @map_display_bp.route("/save_place", methods=['POST'])
 def save_place_route():
@@ -52,7 +60,14 @@ def save_place_route():
     if existing_place:
         return jsonify({"error": "Place already saved"}), 400
 
+    place_id = data.get('place_id', None)
+    if place_id:
+        popularity_data = get_popularity(place_id)
+    else:
+        popularity_data = []
+
     try:
+        print(type(popularity_data), type(data.get('open_hours', '[]')))
         saved_place = save_place(
             user_id=user_id,
             name=data['name'],
@@ -61,6 +76,8 @@ def save_place_route():
             latitude=data['latitude'],
             longitude=data['longitude'],
             editorial_summary=data.get('editorial_summary', ''),
+            popularity_data=popularity_data,
+            open_hours=json.loads(data.get('open_hours', '[]'))
         )
         return jsonify({"message": "Place saved successfully", "place_id": saved_place.id}), 201
     except Exception as e:

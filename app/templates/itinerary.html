@@ -9,6 +9,16 @@
         <a href="/planning" class="back-link">← Back to Planning</a>
 
         <h1>Build Your Itinerary</h1>
+        <form method="GET" action="">
+            <label for="start_date">Start Date:</label>
+            <input type="date" id="start_date" name="start_date" required value="{{ start_date }}">
+
+            <label for="end_date">End Date:</label>
+            <input type="date" id="end_date" name="end_date" required value="{{ end_date }}">
+
+            <button type="submit">Generate</button>
+        </form>
+
         <div class="summary">
             <div class="summary-stats">
                 <div class="stat">

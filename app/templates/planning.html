@@ -29,13 +29,14 @@
                 </div>
                 <button class="save-btn"
                         data-place='{{ {
-                            "id": place.place_id,
+                            "place_id": place.place_id,
                             "name": place.name,
                             "address": place.address,
                             "city": city,
                             "latitude": place.location.lat,
                             "longitude": place.location.lng,
-                            "editorial_summary": place.editorial_summary
+                            "editorial_summary": place.editorial_summary,
+                            "open_hours": place.open_hours | tojson,
                         } | tojson }}'
                         onclick="savePlace(this)"
                         title="Save place">⭐</button>

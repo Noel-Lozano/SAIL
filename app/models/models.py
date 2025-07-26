@@ -30,5 +30,6 @@ class Place(db.Model):
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     editorial_summary = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    popularity_data = db.Column(db.JSON)
+    open_hours = db.Column(db.JSON)
 
