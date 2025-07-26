@@ -5,6 +5,7 @@ from app.models.db_utils import create_user, validate_user_login, save_search, g
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from app import create_app
@@ -13,7 +14,8 @@ app = create_app()
 # Config
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///travelbot.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.getenv("FLASK_SECRET_KEY")
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
+print("SECRET_KEY:", os.getenv("SECRET_KEY"))
 
 db.init_app(app)
 
