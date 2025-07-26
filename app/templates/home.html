@@ -17,6 +17,20 @@
     <label for="end-date">End Date</label>
     <input type="date" id="end-date" name="end_date" class="form-control" required>
   </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    
+    const todayStr = today.toISOString().split('T')[0];
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    
+    document.getElementById('start-date').setAttribute('min', todayStr);
+    document.getElementById('end-date').setAttribute('min', tomorrowStr);
+  });
+  </script>
   <button type="submit" class="btn btn-primary">Plan Trip</button>
 </form>
 {% endblock %}
