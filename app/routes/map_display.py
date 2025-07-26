@@ -3,7 +3,7 @@ from flask import render_template, request, Blueprint, jsonify, session
 from app.api.map_api import get_places_from_city
 from app.models.db_utils import save_place, get_user_places, delete_place
 from app.models.models import Place
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 
@@ -13,12 +13,23 @@ FRONTEND_MAP_API = os.getenv("FRONTEND_MAP_API")
 
 @map_display_bp.route("/planning")
 def planning():
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    tomorrow_str = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+
     city = request.args.get('city', 'New York')
+    start_date = request.args.get('start_date', today_str)
+    end_date = request.args.get('end_date', tomorrow_str)
     place = request.args.get('place', '')
     page_n = request.args.get('page', 1, type=int)
     places = get_places_from_city(city, place, page_n) or []
 
-    return render_template("planning.html", places=places, google_maps_api_key=FRONTEND_MAP_API, city=city, place=place)
+    return render_template("planning.html", 
+                           places=places, 
+                           google_maps_api_key=FRONTEND_MAP_API,
+                           city=city, 
+                           place=place, 
+                           start_date=start_date, 
+                           end_date=end_date)
 
 
 @map_display_bp.route("/save_place", methods=['POST'])

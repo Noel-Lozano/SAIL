@@ -1,11 +1,18 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <head>
     <title>Places to Visit</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body>
-    <h2>Places to Visit in {{ city }}</h2>
+<body> -->
+{% extends "layout.html" %}
+{% block title %}Planning{% endblock %}
+{% block content %}
+    <h2 class="fw-bold">Places to Visit in {{ city }}</h2>
+    {% if start_date and end_date %}
+        <p><strong>Trip Dates:</strong> {{ start_date }} to {{ end_date }}</p>
+    {% endif %}
+
     
     <div class="search-form">
         <form action="/planning" method="get">
@@ -145,5 +152,6 @@
         });
     </script>
     <script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap"></script>
-</body>
-</html>
+{% endblock %}
+<!-- </body>
+</html> -->
