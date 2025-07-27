@@ -20,7 +20,7 @@
             <input type="text" name="place" placeholder="Enter place (optional)" value="{{ place }}">
             <button type="submit">Search</button>
         </form>
-        <a href="/saved_places" class="btn-success">View My Saved Places</a>
+        <a href="/itinerary" class="btn-success">View My Itinerary</a>
     </div>
 
     <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 5rem;">
@@ -46,36 +46,31 @@
 
 
 
-    <script>    
-        function savePlace(name, address, city, country, lat, lng, buttonElement) {
-            // Disable button to prevent double-clicking
+    <script>
+        let map;
+        let markers = {};
+        let infoWindows = {};
+
+        function savePlace(buttonElement) {
+            const place = JSON.parse(buttonElement.dataset.place);
+
             buttonElement.disabled = true;
             buttonElement.style.opacity = '0.5';
-            
+
             fetch('/save_place', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    name: name, 
-                    address: address, 
-                    city: city, 
-                    country: country,
-                    latitude: lat, 
-                    longitude: lng 
-                })
+                body: JSON.stringify(place)
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 if (data.message) {
-                    // Change star color to indicate saved
                     buttonElement.classList.add('saved');
                     buttonElement.title = 'Place saved!';
-                    
-                    // Show brief success message
-                    const originalText = buttonElement.innerHTML;
+                    const original = buttonElement.innerHTML;
                     buttonElement.innerHTML = '✅';
                     setTimeout(() => {
-                        buttonElement.innerHTML = originalText;
+                        buttonElement.innerHTML = original;
                     }, 1000);
                 } else {
                     alert(data.error || 'Error saving place');
@@ -86,24 +81,61 @@
                 alert('Error saving place');
             })
             .finally(() => {
-                // Re-enable button
                 buttonElement.disabled = false;
                 buttonElement.style.opacity = '1';
             });
         }
-    </script>
 
-    <script>
-        const locationsData = {{ places | tojson | safe }};
-        console.log('Locations data:', locationsData); // Debug line
-    </script>
-    <script>
-        let map;
-        function initMap() {
-            console.log('InitMap called'); // Debug line
+        function focusOnMarker(placeId) {
+            const marker = markers[placeId];
+            if (marker) {
+                map.setCenter(marker.getPosition());
+                map.setZoom(16);
+                
+                const infoWindow = infoWindows[placeId];
+                if (infoWindow) {
+                    Object.values(infoWindows).forEach(iw => iw.close());
+                    infoWindow.open(map, marker);
+                }
+                
+                document.querySelectorAll('.place-item').forEach(item => {
+                    item.classList.remove('highlighted');
+                });
+                const placeItem = document.querySelector(`[data-place-id="${placeId}"]`);
+                if (placeItem) {
+                    placeItem.classList.add('highlighted');
+                    placeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                
+                marker.setAnimation(google.maps.Animation.BOUNCE);
+                setTimeout(() => {
+                    marker.setAnimation(null);
+                }, 2000);
+            }
+        }
+
+        function createInfoWindowContent(place) {
+            const summary = place.editorial_summary || 'No description available';
+            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${place.location.lat},${place.location.lng}`;
             
+            return `
+                <div class="custom-info-window">
+                    <div class="info-title">${place.name}</div>
+                    <div class="info-address">${place.address}</div>
+                    <div class="info-summary">${summary}</div>
+                    <div class="info-actions">
+                        <a href="${mapsUrl}" target="_blank" class="info-maps-link">Open in Maps</a>
+                        <button class="info-save-btn" onclick="savePlace(this)" 
+                                data-place='${JSON.stringify(place)}'>Save Place</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        const locationsData = {{ places | tojson | safe }};
+
+        function initMap() {
             const mapElement = document.getElementById("map");
-            console.log('Map element:', mapElement); // Debug line
             
             map = new google.maps.Map(mapElement, { 
                 zoom: 12, 
@@ -113,22 +145,45 @@
             const bounds = new google.maps.LatLngBounds();
             const locations = locationsData;
             
-            console.log('Processing locations:', locations.length); // Debug line
-            
             locations.forEach(loc => {
                 if (loc && loc.location) {
-                    console.log('Adding marker for:', loc.name); // Debug line
-                    
                     const marker = new google.maps.Marker({
                         position: { lat: loc.location.lat, lng: loc.location.lng },
                         map: map,
-                        title: loc.name
+                        title: loc.name,
+                        icon: {
+                            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                                <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M15 0C6.7 0 0 6.7 0 15c0 11.25 15 25 15 25s15-13.75 15-25C30 6.7 23.3 0 15 0z" fill="#EA4335"/>
+                                    <circle cx="15" cy="15" r="8" fill="white"/>
+                                    <text x="15" y="20" text-anchor="middle" font-size="14" fill="#EA4335">📍</text>
+                                </svg>
+                            `),
+                            scaledSize: new google.maps.Size(30, 40),
+                            anchor: new google.maps.Point(15, 40)
+                        }
                     });
 
-                    const infowindow = new google.maps.InfoWindow({
-                        content: `<strong>${loc.name}</strong><br>${loc.address}`
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: createInfoWindowContent(loc)
                     });
-                    marker.addListener("click", () => infowindow.open(map, marker));
+
+                    marker.addListener("click", () => {
+                        Object.values(infoWindows).forEach(iw => iw.close());
+                        infoWindow.open(map, marker);
+                        
+                        document.querySelectorAll('.place-item').forEach(item => {
+                            item.classList.remove('highlighted');
+                        });
+                        const placeItem = document.querySelector(`[data-place-id="${loc.place_id}"]`);
+                        if (placeItem) {
+                            placeItem.classList.add('highlighted');
+                            placeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    });
+
+                    markers[loc.place_id] = marker;
+                    infoWindows[loc.place_id] = infoWindow;
 
                     bounds.extend(marker.getPosition());
                 }
@@ -136,23 +191,18 @@
 
             if (locations.length > 0) {
                 map.fitBounds(bounds);
-                console.log('Map bounds set to fit markers'); // Debug line
+                if (locations.length === 1) {
+                    map.setZoom(15);
+                }
             } else {
-                // Set default location if no places found
-                map.setCenter({lat: 40.7128, lng: -74.0060}); // Default to NYC
+                map.setCenter({lat: 40.7128, lng: -74.0060});
                 map.setZoom(12);
-                console.log('Map set to default NYC location'); // Debug line
             }
         }
         
-        // Also try to initialize map when page loads
         window.addEventListener('load', function() {
-            console.log('Page loaded, checking if Google Maps is available');
             if (typeof google !== 'undefined' && google.maps) {
-                console.log('Google Maps is available, calling initMap');
                 initMap();
-            } else {
-                console.log('Google Maps not yet loaded');
             }
         });
     </script>

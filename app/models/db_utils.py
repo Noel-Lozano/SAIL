@@ -39,36 +39,27 @@ def clear_user_searches(user_id):
     Search.query.filter_by(user_id=user_id).delete()
     db.session.commit()
 
-def save_place(user_id, name, city, country, address, latitude, longitude):
+def save_place(user_id, name, city, address, latitude, longitude, editorial_summary):
     place = Place(
         user_id=user_id,
         name=name,
         city=city,
-        country=country,
         address=address,
         latitude=latitude,
-        longitude=longitude
+        longitude=longitude,
+        editorial_summary=editorial_summary or "No summary provided"
     )
     db.session.add(place)
     db.session.commit()
     return place
 
-def get_user_places(user_id, city=None, country=None, date_from=None, date_to=None):
+def get_user_places(user_id, city=None):
     """Get user's saved places with optional filters"""
     query = Place.query.filter_by(user_id=user_id)
     
     if city:
         query = query.filter(Place.city == city)
-    
-    if country:
-        query = query.filter(Place.country == country)
-    
-    if date_from:
-        query = query.filter(Place.created_at >= date_from)
-    
-    if date_to:
-        query = query.filter(Place.created_at <= date_to)
-    
+
     return query.order_by(Place.created_at.desc()).all()
 
 def delete_place(place_id):
@@ -104,12 +95,9 @@ def get_user_stats(user_id):
     places = Place.query.filter_by(user_id=user_id).all()
     
     cities = set(place.city for place in places)
-    countries = set(place.country for place in places if place.country)
     
     return {
         'total_places': len(places),
         'unique_cities': len(cities),
-        'unique_countries': len(countries),
         'cities': sorted(list(cities)),
-        'countries': sorted(list(countries))
     }

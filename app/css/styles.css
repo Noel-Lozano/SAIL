@@ -116,6 +116,115 @@ h1, h2 {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
+/* Enhanced Map Features */
+.place-item.highlighted {
+    border-color: #007bff;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    background: #f0f8ff;
+}
+
+.place-summary {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.4;
+    font-style: italic;
+    margin-top: 8px;
+    margin-bottom: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.place-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.maps-link {
+    background: #ea4335;
+    color: white;
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    transition: background 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.maps-link:hover {
+    background: #d33b2c;
+}
+
+.view-on-map-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.3s ease;
+}
+
+.view-on-map-btn:hover {
+    background: #1e7e34;
+}
+
+/* Custom Info Window Styles */
+.custom-info-window {
+    max-width: 300px;
+}
+
+.info-title {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.info-address {
+    color: #666;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.info-summary {
+    color: #555;
+    line-height: 1.4;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.info-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.info-maps-link {
+    background: #ea4335;
+    color: white;
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.info-save-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
 .place-info {
     flex-grow: 1;
 }
@@ -306,6 +415,16 @@ h1, h2 {
     line-height: 1.4;
 }
 
+.place-card .place-summary {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.4;
+    font-style: italic;
+    margin-bottom: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
 /* Place Meta Information */
 .place-meta {
     display: flex;
@@ -317,6 +436,19 @@ h1, h2 {
     padding-top: 12px;
     gap: 10px;
     flex-wrap: wrap;
+}
+
+.place-meta-extended {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #888;
+    border-top: 1px solid #eee;
+    padding-top: 12px;
 }
 
 .place-date {
@@ -331,6 +463,15 @@ h1, h2 {
     border-radius: 4px;
     font-size: 11px;
     color: #495057;
+}
+
+.coordinates {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #888;
+    background: #f5f5f5;
+    padding: 3px 6px;
+    border-radius: 3px;
 }
 
 /* Delete Button */
@@ -408,7 +549,20 @@ h1, h2 {
         gap: 10px;
     }
     
+    .place-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        width: 100%;
+    }
+    
     .place-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .place-meta-extended {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;

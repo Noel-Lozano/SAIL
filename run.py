@@ -18,8 +18,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 
 db.init_app(app)
+from app.models.models import Place
 
 with app.app_context():
+    Place.__table__.drop(db.engine)
     db.create_all()
 
 # app.register_blueprint(map_display_bp)
