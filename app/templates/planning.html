@@ -1,11 +1,18 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <head>
     <title>Places to Visit</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body>
-    <h2>Places to Visit in {{ city }}</h2>
+<body> -->
+{% extends "layout.html" %}
+{% block title %}Planning{% endblock %}
+{% block content %}
+    <h2 class="fw-bold" style="margin-top: 3rem;">Places to Visit in {{ city }}</h2>
+    {% if start_date and end_date %}
+        <p><strong>Trip Dates:</strong> {{ start_date }} to {{ end_date }}</p>
+    {% endif %}
+
     
     <div class="search-form">
         <form action="/planning" method="get">
@@ -15,43 +22,29 @@
         </form>
         <a href="/itinerary" class="btn-success">View My Itinerary</a>
     </div>
-    
-    <div id="map"></div>
-    
-    <div class="places-list">
-        {% for place in places %}
-            <div class="place-item" data-place-id="{{ place.place_id }}">
+
+    <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 5rem;">
+        <div class="places-list" style="width: 30%; height: 500px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+            {% for place in places %}
+            <div class="place-item mb-3 p-2 border rounded">
                 <div class="place-info">
-                    <div class="place-name">{{ place.name }}</div>
-                    <div class="place-address">{{ place.address }}</div>
-                    {% if place.editorial_summary %}
-                        <div class="place-summary">{{ place.editorial_summary }}</div>
-                    {% endif %}
+                <div class="place-name fw-bold">{{ place.name }}</div>
+                <div class="place-address text-muted">{{ place.address }}</div>
                 </div>
-                <div class="place-actions">
-                    <button class="save-btn"
-                            data-place='{{ {
-                                "id": place.place_id,
-                                "name": place.name,
-                                "address": place.address,
-                                "city": city,
-                                "latitude": place.location.lat,
-                                "longitude": place.location.lng,
-                                "editorial_summary": place.editorial_summary
-                            } | tojson }}'
-                            onclick="savePlace(this)"
-                            title="Save place">⭐</button>
-                    <a href="https://www.google.com/maps/search/?api=1&query={{ place.location.lat }},{{ place.location.lng }}" 
-                       target="_blank" 
-                       class="maps-link"
-                       title="Open in Google Maps">Maps</a>
-                    <button class="view-on-map-btn" 
-                            onclick="focusOnMarker('{{ place.place_id }}')"
-                            title="View on map">📍</button>
-                </div>
+                <button class="save-btn btn btn-sm mt-1" 
+                        style="filter: drop-shadow(2px 2px 4px rgba(120, 114, 9, 0.5));"
+                        onclick="savePlace('{{ place.name }}', '{{ place.address }}', '{{ city }}', '{{ place.country or 'Unknown' }}', {{ place.location.lat }}, {{ place.location.lng }}, this)" 
+                        title="Save place">
+                ⭐
+                </button>
             </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
+
+        <div id="map" style="height: 500px; width: 70%; border: 2px solid #ddd; border-radius: 5px;"></div>
     </div>
+
+
 
     <script>
         let map;
@@ -214,5 +207,6 @@
         });
     </script>
     <script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap"></script>
-</body>
-</html>
+{% endblock %}
+<!-- </body>
+</html> -->
