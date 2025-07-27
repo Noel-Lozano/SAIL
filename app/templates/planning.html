@@ -6,13 +6,28 @@
         <p><strong>Trip Dates:</strong> {{ start_date }} to {{ end_date }}</p>
     {% endif %}
 
-    <div class="search-form">
-        <form action="/planning" method="get">
-            <input type="text" name="city" placeholder="Enter city" value="{{ city }}">
-            <input type="text" name="place" placeholder="Enter place (optional)" value="{{ place }}">
-            <button type="submit">Search</button>
+    <div class="search-form d-flex justify-content-between align-items-center" style="gap: 1rem;">
+        <form action="/planning" method="get" class="d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
+            <input type="text" name="city" placeholder="Enter city" value="{{ city }}" class="form-control">
+            <input type="text" name="place" placeholder="Enter place (optional)" value="{{ place }}" class="form-control">
+            <button type="submit" class="btn btn-primary">Search</button>
         </form>
-        <a href="/itinerary" class="btn-success">View My Itinerary</a>
+
+        <div id="cart-icon-container" style="position: relative;">
+            <a href="/itinerary" class="cart-icon">
+                <img src="{{ url_for('static', filename='images/cart.png') }}" alt="Cart" style="width: 30px; height: 30px;">
+                <span id="cart-count" style="
+                    position: absolute;
+                    top: -6px;
+                    right: -6px;
+                    background-color: red;
+                    color: white;
+                    border-radius: 50%;
+                    padding: 2px 6px;
+                    font-size: 12px;
+                ">{{ total_places }}</span>
+            </a>
+        </div>
     </div>
 
     <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 5rem;">
@@ -30,7 +45,7 @@
                 </div>
                 <div class="place-actions" style="display: flex; gap: 8px; align-items: center; margin-top: 10px;">
                     <button class="save-btn btn btn-sm" 
-                            style="filter: drop-shadow(2px 2px 4px rgba(120, 114, 9, 0.5));"
+                            style="filter: drop-shadow(2px 2px 4px #d0c93d80);"
                             data-place='{{ {
                                 "id": place.place_id,
                                 "name": place.name,
@@ -42,17 +57,17 @@
                             } | tojson }}'
                             onclick="savePlace(this)" 
                             title="Save place">
-                    ⭐
+                    ★
                     </button>
+                    <button class="view-on-map-btn btn btn-sm" 
+                            style="background: #6fd787; color: white; font-size: 12px;"
+                            onclick="focusOnMarker('{{ place.place_id }}')"
+                            title="View on map">📍</button>
                     <a href="https://www.google.com/maps/search/?api=1&query={{ place.location.lat }},{{ place.location.lng }}" 
                        target="_blank" 
                        class="maps-link btn btn-sm"
                        style="background: #ea4335; color: white; text-decoration: none; font-size: 12px;"
-                       title="Open in Google Maps">Maps</a>
-                    <button class="view-on-map-btn btn btn-sm" 
-                            style="background: #28a745; color: white; font-size: 12px;"
-                            onclick="focusOnMarker('{{ place.place_id }}')"
-                            title="View on map">📍</button>
+                       title="Open in Google Maps">Google Maps</a>
                 </div>
             </div>
             {% endfor %}
@@ -84,9 +99,12 @@
                     buttonElement.title = 'Place saved!';
                     const original = buttonElement.innerHTML;
                     buttonElement.innerHTML = '✅';
-                    setTimeout(() => {
-                        buttonElement.innerHTML = original;
-                    }, 1000);
+                    
+                    const cartCountElem = document.getElementById('cart-count');
+                    if (cartCountElem) {
+                        const currentCount = parseInt(cartCountElem.textContent) || 0;
+                        cartCountElem.textContent = currentCount + 1;
+                    }
                 } else {
                     alert(data.error || 'Error saving place');
                 }
