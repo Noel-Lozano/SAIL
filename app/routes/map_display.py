@@ -13,6 +13,12 @@ FRONTEND_MAP_API = os.getenv("FRONTEND_MAP_API")
 
 @map_display_bp.route("/planning")
 def planning():
+    if 'user_id' not in session:
+        return render_template("login.html", message="Please log in to view your itinerary")
+
+    user_id = session['user_id']
+    user_places = get_user_places(user_id=user_id)
+
     today_str = datetime.now().strftime('%Y-%m-%d')
     tomorrow_str = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
 
@@ -29,7 +35,8 @@ def planning():
                            city=city, 
                            place=place, 
                            start_date=start_date, 
-                           end_date=end_date)
+                           end_date=end_date,
+                           total_places=len(user_places))
 
 @map_display_bp.route("/itinerary")
 def itinerary():
