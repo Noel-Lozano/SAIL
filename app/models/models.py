@@ -35,3 +35,8 @@ class Place(db.Model):
     popularity_data = db.Column(db.JSON)
     open_hours = db.Column(db.JSON)
 
+class Itinerary(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    itinerary = db.Column(db.JSON, nullable=False)

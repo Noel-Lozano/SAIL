@@ -1,5 +1,17 @@
-from .models import db, User, Search, Place
+from .models import db, User, Search, Place, Itinerary
 from werkzeug.security import generate_password_hash, check_password_hash
+
+def save_user_itinerary(user_id, name, itinerary):
+    # if itinerary with name exists, update it
+    existing_itinerary = Itinerary.query.filter_by(user_id=user_id, name=name).first()
+    if existing_itinerary:
+        existing_itinerary.itinerary = itinerary
+        db.session.commit()
+        return existing_itinerary
+
+    itinerary = Itinerary(user_id=user_id, name=name, itinerary=itinerary)
+    db.session.add(itinerary)
+    db.session.commit()
 
 def create_user(username, email, password):
     if get_user_by_email(email):

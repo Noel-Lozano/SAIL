@@ -4,8 +4,8 @@ from numpy import place
 from app.api.map_api import get_places_from_city, get_popularity
 from app.api.genAI_api import generate_groupings
 from app.api.weather_api import get_weather
-from app.models.db_utils import save_place, get_user_places, delete_place
-from app.models.models import Place
+from app.models.db_utils import save_place, get_user_places, delete_place, save_user_itinerary
+from app.models.models import Place, Itinerary
 from datetime import datetime, timedelta
 from itertools import permutations
 import json
@@ -35,12 +35,7 @@ def planning():
     user_id = session['user_id']
     user_places = get_user_places(user_id=user_id)
 
-    today_str = datetime.now().strftime('%Y-%m-%d')
-    tomorrow_str = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
-
     city = request.args.get('city', 'New York')
-    start_date = request.args.get('start_date', today_str)
-    end_date = request.args.get('end_date', tomorrow_str)
     place = request.args.get('place', '')
     page_n = request.args.get('page', 1, type=int)
     places = get_places_from_city(city, place, page_n) or []
@@ -50,8 +45,6 @@ def planning():
                            google_maps_api_key=FRONTEND_MAP_API,
                            city=city, 
                            place=place, 
-                           start_date=start_date, 
-                           end_date=end_date,
                            total_places=len(user_places))
 
 def optimize_groupings(all_places, groupings, weather_prefs, weather_data, start_date):
@@ -127,48 +120,61 @@ def itinerary():
     
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
-    print(f"[DEBUG] Itinerary request: start_date={start_date}, end_date={end_date}")
+    itinerary_name = request.args.get('name')
 
-    user_id = session['user_id']
-    all_places = get_user_places(user_id=user_id)
+    if itinerary_name:
+        user_id = session['user_id']
+        itinerary = Itinerary.query.filter_by(user_id=user_id, name=itinerary_name).first()
+        itinerary = itinerary.itinerary if itinerary else []
+        dict_places = sum([day['places'] for day in itinerary], [])
 
-    dict_places = [place.__dict__ for place in all_places]
-    for place in dict_places: place.pop('_sa_instance_state')
-
-    itinerary = []
-    if start_date and end_date:
-        groupings, weather_prefs = generate_groupings(all_places, start_date, end_date)
-        weather_data = get_weather(all_places[0].city, start_date, end_date)
-        start_date = datetime.strptime(start_date, "%Y-%m-%d")
-        best_permutation = optimize_groupings(all_places, groupings, weather_prefs, weather_data, start_date)
-
-        unused_places = set(range(1, len(all_places) + 1)) - {place_id for day in best_permutation for place_id in day}
-        for i, day in enumerate(best_permutation):
-            date = start_date + timedelta(days=i)
-            itinerary.append({
-                "date": date.strftime("%A, %B %d").replace(" 0", " "),
-                "places": [dict_places[place_id - 1] for place_id in day]
-            })
-
-        if unused_places:
-            unused_places_list = [dict_places[place_id - 1] for place_id in unused_places]
-            itinerary.append({
-                "date": "Unassigned",
-                "places": unused_places_list
-            })
     else:
-        itinerary = [{"date": "Unassigned", "places": dict_places}]
+        user_id = session['user_id']
+        all_places = get_user_places(user_id=user_id)
 
-    for day in itinerary:
-        day['color'] = get_random_bold_color()
-        for place in day['places']:
-            place['color'] = day['color']
+        dict_places = [place.__dict__ for place in all_places]
+        for place in dict_places: place.pop('_sa_instance_state')
+
+        itinerary = []
+        if start_date and end_date:
+            groupings, weather_prefs = generate_groupings(all_places, start_date, end_date)
+            weather_data = get_weather(all_places[0].city, start_date, end_date)
+            start_date = datetime.strptime(start_date, "%Y-%m-%d")
+            best_permutation = optimize_groupings(all_places, groupings, weather_prefs, weather_data, start_date)
+
+            unused_places = set(range(1, len(all_places) + 1)) - {place_id for day in best_permutation for place_id in day}
+            for i, day in enumerate(best_permutation):
+                date = start_date + timedelta(days=i)
+                itinerary.append({
+                    "date": date.strftime("%A, %B %d").replace(" 0", " "),
+                    "places": [dict_places[place_id - 1] for place_id in day]
+                })
+
+            if unused_places:
+                unused_places_list = [dict_places[place_id - 1] for place_id in unused_places]
+                itinerary.append({
+                    "date": "Unassigned",
+                    "places": unused_places_list
+                })
+        else:
+            itinerary = [{"date": "Unassigned", "places": dict_places}]
+
+        for day in itinerary:
+            day['color'] = get_random_bold_color()
+            for place in day['places']:
+                place['color'] = day['color']
+                place['date'] = day['date'].split(",")[0]
+    
+    saved_itineraries = [it.name for it in Itinerary.query.filter_by(user_id=user_id).all()]
+    print(f"[DEBUG] Saved itineraries: {saved_itineraries}")
 
     return render_template("build_itinerary.html",
                          itinerary=itinerary,
                          all_places=dict_places,
                          start_date=start_date.strftime("%Y-%m-%d") if start_date else None,
                          end_date=end_date,
+                         saved_itineraries=saved_itineraries,
+                         itinerary_name=itinerary_name,
                          google_maps_api_key=FRONTEND_MAP_API)
 
 @map_display_bp.route("/cart")
@@ -182,6 +188,27 @@ def cart():
     return render_template("cart.html",
                          places=all_places,
                          total_places=len(all_places))
+
+@map_display_bp.route("/save_itinerary", methods=['POST'])
+def save_itinerary():
+    if 'user_id' not in session:
+        return jsonify({"error": "Please log in to save itineraries"}), 401
+
+    user_id = session['user_id']
+    data = request.get_json()
+
+    itinerary_name = data.get('name')
+    itinerary_data = data.get('itinerary')
+
+    if not itinerary_name or not itinerary_data:
+        return jsonify({"error": "Invalid itinerary data"}), 400
+
+    try:
+        # Save the itinerary to the database
+        save_user_itinerary(user_id=user_id, name=itinerary_name, itinerary=itinerary_data)
+        return jsonify({"success": True}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @map_display_bp.route("/save_place", methods=['POST'])
 def save_place_route():
@@ -203,8 +230,9 @@ def save_place_route():
     if existing_place:
         return jsonify({"error": "Place already saved"}), 400
 
-    place_id = data.get('place_id', None)
+    place_id = data.get('id', None)
     if place_id:
+        print("DEBUG: Fetching popularity data for place_id:", place_id)
         popularity_data = get_popularity(place_id)
     else:
         popularity_data = []
