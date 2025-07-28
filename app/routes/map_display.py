@@ -7,10 +7,13 @@ from app.api.weather_api import get_weather
 from app.models.db_utils import save_place, get_user_places, delete_place
 from app.models.models import Place
 from datetime import datetime, timedelta
+<<<<<<< HEAD
 from itertools import permutations
 import json
 import random
 import colorsys
+=======
+>>>>>>> main
 
 def get_random_bold_color():
     hues = [0, 30, 60, 120, 180, 210, 270, 300]
@@ -29,12 +32,30 @@ FRONTEND_MAP_API = os.getenv("FRONTEND_MAP_API")
 
 @map_display_bp.route("/planning")
 def planning():
+    if 'user_id' not in session:
+        return render_template("login.html", message="Please log in to view your itinerary")
+
+    user_id = session['user_id']
+    user_places = get_user_places(user_id=user_id)
+
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    tomorrow_str = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+
     city = request.args.get('city', 'New York')
+    start_date = request.args.get('start_date', today_str)
+    end_date = request.args.get('end_date', tomorrow_str)
     place = request.args.get('place', '')
     page_n = request.args.get('page', 1, type=int)
     places = get_places_from_city(city, place, page_n) or []
 
-    return render_template("planning.html", places=places, google_maps_api_key=FRONTEND_MAP_API, city=city, place=place)
+    return render_template("planning.html", 
+                           places=places, 
+                           google_maps_api_key=FRONTEND_MAP_API,
+                           city=city, 
+                           place=place, 
+                           start_date=start_date, 
+                           end_date=end_date,
+                           total_places=len(user_places))
 
 def optimize_groupings(all_places, groupings, weather_prefs, weather_data, start_date):
     # pair each grouping with its weather preference

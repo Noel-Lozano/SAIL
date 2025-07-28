@@ -2,9 +2,11 @@ from flask import render_template, request, redirect, session, flash, url_for, F
 from flask_sqlalchemy import SQLAlchemy
 from app.models.models import db, User, Search
 from app.models.db_utils import create_user, validate_user_login, save_search, get_user_searches, clear_user_searches
+from app.routes.map_display import map_display_bp
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from app import create_app
@@ -13,14 +15,16 @@ app = create_app()
 # Config
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///travelbot.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.getenv("FLASK_SECRET_KEY")
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 
 db.init_app(app)
 from app.models.models import Place
 
 with app.app_context():
-    # Place.__table__.drop(db.engine)
+    # Place.__table__.drop(db.engine, checkfirst=True)
     db.create_all()
+
+# app.register_blueprint(map_display_bp)
 
 # ROUTES
 @app.route('/')
@@ -66,53 +70,55 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route('/search', methods=['POST'])
-def search():
-    if 'user_id' not in session:
-        flash("You must be logged in to perform a search.", "danger")
-        return redirect(url_for('login'))
+# @app.route('/search', methods=['POST'])
+# def search():
+#     if 'user_id' not in session:
+#         flash("You must be logged in to perform a search.", "danger")
+#         return redirect(url_for('login'))
 
-    user_id = session['user_id']
-    city = request.form['city']
-    date = request.form['date']
-    budget = float(request.form['budget'])
-    weather = request.form.get('weather')
-    itinerary = request.form.get('itinerary')
+#     user_id = session['user_id']
+#     city = request.form['city']
+#     start_date = request.form['start_date']
+#     end_date = request.form['end_date']
+#     # budget = float(request.form['budget'])
+#     # weather = request.form.get('weather')
+#     # itinerary = request.form.get('itinerary')
 
-    data = {
-        'city': city,
-        'date': date,
-        'budget': budget,
-        'weather': weather,
-        'itinerary': itinerary
-    }
+#     data = {
+#         'city': city,
+#         'start_date': start_date,
+#         'end_date': end_date,
+#         # 'budget': budget,
+#         # 'weather': weather,
+#         # 'itinerary': itinerary
+#     }
 
-    save_search(user_id, data)
-    flash("Search saved.", "success")
-    return redirect(url_for('index'))
-
-
-@app.route('/searches')
-def get_searches():
-    if 'user_id' not in session:
-        flash("Please log in to view your searches.", "danger")
-        return redirect(url_for('login'))
-
-    user_id = session['user_id']
-    searches = get_user_searches(user_id)
-    return render_template('searches.html', searches=searches)
+#     save_search(user_id, data)
+#     flash("Search saved.", "success")
+#     return redirect(url_for('map_display_bp.planning', city=city, date=date))
 
 
-@app.route('/searches/clear', methods=['POST'])
-def clear_searches():
-    if 'user_id' not in session:
-        flash("Please log in to clear your history.", "danger")
-        return redirect(url_for('login'))
+# @app.route('/searches')
+# def get_searches():
+#     if 'user_id' not in session:
+#         flash("Please log in to view your searches.", "danger")
+#         return redirect(url_for('login'))
 
-    user_id = session['user_id']
-    clear_user_searches(user_id)
-    flash("Search history cleared.", "info")
-    return redirect(url_for('get_searches'))
+#     user_id = session['user_id']
+#     searches = get_user_searches(user_id)
+#     return render_template('searches.html', searches=searches)
+
+
+# @app.route('/searches/clear', methods=['POST'])
+# def clear_searches():
+#     if 'user_id' not in session:
+#         flash("Please log in to clear your history.", "danger")
+#         return redirect(url_for('login'))
+
+#     user_id = session['user_id']
+#     clear_user_searches(user_id)
+#     flash("Search history cleared.", "info")
+#     return redirect(url_for('get_searches'))
 
 if __name__ == '__main__':
     app.run(debug=True)
