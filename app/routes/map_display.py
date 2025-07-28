@@ -150,6 +150,18 @@ def itinerary():
                          end_date=end_date,
                          google_maps_api_key=FRONTEND_MAP_API)
 
+@map_display_bp.route("/cart")
+def cart():
+    if 'user_id' not in session:
+        return render_template("login.html", message="Please log in to view your cart")
+
+    user_id = session['user_id']
+    all_places = get_user_places(user_id=user_id)
+
+    return render_template("cart.html",
+                         places=all_places,
+                         total_places=len(all_places))
+
 @map_display_bp.route("/save_place", methods=['POST'])
 def save_place_route():
     if 'user_id' not in session:

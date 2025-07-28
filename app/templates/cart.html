@@ -34,9 +34,24 @@
                     <div class="place-card">
                         <div class="place-name">{{ place.name }}</div>
                         <div class="place-address">{{ place.address }}</div>
-                        <div class="place-meta">
-                            <span class="place-summary">{{ place.editorial_summary }}</span>
-                            <button class="delete-btn" onclick="deletePlace({{ place.id }}, this)">Delete</button>
+                        
+                        {% if place.editorial_summary and place.editorial_summary != "No summary provided" %}
+                            <div class="place-summary">{{ place.editorial_summary }}</div>
+                        {% endif %}
+                        
+                        <div class="place-meta-extended">
+                            <div class="coordinates">
+                                {{ "%.4f"|format(place.latitude) }}, {{ "%.4f"|format(place.longitude) }}
+                            </div>
+                            <div class="place-actions">
+                                <a href="https://www.google.com/maps/search/?api=1&query={{ place.latitude }},{{ place.longitude }}" 
+                                   target="_blank" 
+                                   class="maps-link"
+                                   title="Open in Google Maps">
+                                   🗺️ Maps
+                                </a>
+                                <button class="delete-btn" onclick="deletePlace({{ place.id }}, this)">Delete</button>
+                            </div>
                         </div>
                     </div>
                 {% endfor %}
