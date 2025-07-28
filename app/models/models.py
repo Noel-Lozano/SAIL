@@ -10,6 +10,8 @@ class User(db.Model):
     hashed_password = db.Column(db.String(128), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     searches = db.relationship('Search', backref='user', lazy=True)
+    interests = db.Column(db.Text, nullable=True)
+    ai_enabled = db.Column(db.Boolean, default=False)
 
 class Search(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -30,5 +32,11 @@ class Place(db.Model):
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     editorial_summary = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    popularity_data = db.Column(db.JSON)
+    open_hours = db.Column(db.JSON)
 
+class Itinerary(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    itinerary = db.Column(db.JSON, nullable=False)

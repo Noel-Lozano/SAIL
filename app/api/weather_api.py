@@ -47,11 +47,13 @@ def get_weather(city, start_date, end_date):
         try:
             if "forecast" in data:
                 day_data = data["forecast"]["forecastday"][0]["day"]
+                avg_cloud = int(sum(hour["cloud"] for hour in data["forecast"]["forecastday"][0]["hour"]) / 24)
                 results.append({
                     "date": curr_dt.strftime("%Y-%m-%d"),
                     "avg_temp": day_data["avgtemp_c"],
                     "description": day_data["condition"]["text"],
-                    "icon": day_data["condition"]["icon"]
+                    "icon": day_data["condition"]["icon"],
+                    "avg_cloud": avg_cloud,
                     })
         except (KeyError, IndexError):
             results.append({"date": curr_dt.strftime("%Y-%m-%d"), "error": "Data not available"})
@@ -59,7 +61,3 @@ def get_weather(city, start_date, end_date):
         curr_dt += timedelta(days=1)
 
     return results
-
-    
-
-print(get_weather("New York", "2025-08-04", "2025-08-07"))  # Example usage

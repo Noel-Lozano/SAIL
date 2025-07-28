@@ -27,62 +27,52 @@
     </div>
 
 
-    <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 5rem;">
-        <div class="places-list" style="width: 30%; height: 500px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
-            {% for place in places %}
-            <div class="place-item mb-3 p-2 border rounded" data-place-id="{{ place.place_id }}">
-                <div class="place-info">
-                    <div class="place-name fw-bold">{{ place.name }}</div>
-                    <div class="place-address text-muted">{{ place.address }}</div>
-                    {% if place.editorial_summary %}
-                        <div class="place-summary" style="color: #666; font-size: 14px; font-style: italic; margin-top: 8px; line-height: 1.4;">
-                            {{ place.editorial_summary }}
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="place-actions" style="display: flex; gap: 8px; align-items: center; margin-top: 10px;">
-                    <button class="save-btn btn btn-sm" 
-                            style="filter: drop-shadow(2px 2px 4px #d0c93d80);"
-                            data-place='{{ {
-                                "id": place.place_id,
-                                "name": place.name,
-                                "address": place.address,
-                                "city": city,
-                                "latitude": place.location.lat,
-                                "longitude": place.location.lng,
-                                "editorial_summary": place.editorial_summary
-                            } | tojson }}'
-                            onclick="savePlace(this)" 
-                            title="Save place">
-                    ★
-                    </button>
-                    <button class="view-on-map-btn btn btn-sm" 
-                            style="background: #6fd787; color: white; font-size: 12px;"
-                            onclick="focusOnMarker('{{ place.place_id }}')"
-                            title="View on map">📍</button>
-                    <a href="https://www.google.com/maps/search/?api=1&query={{ place.location.lat }},{{ place.location.lng }}" 
-                       target="_blank" 
-                       class="maps-link btn btn-sm"
-                       style="background: #ea4335; color: white; text-decoration: none; font-size: 12px;"
-                       title="Open in Google Maps">Google Maps</a>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-
-        <div id="map" style="height: 500px; width: 70%; border: 2px solid #ddd; border-radius: 5px;"></div>
+<div class="d-flex flex-column flex-md-row gap-4" style="height: calc(100vh - 180px); margin-bottom: 2rem;">
+  <div class="places-list overflow-auto" style="width: 35%;">
+    {% for place in places %}
+    <div class="place-item mb-3 p-2 border rounded" data-place-id="{{ place.place_id }}">
+      <div class="place-info">
+        <div class="place-name fw-bold" style="cursor: pointer;" onclick="focusOnMarker('{{ place.place_id }}')">{{ place.name }}</div>
+        <div class="place-address text-muted">{{ place.address }}</div>
+        {% if place.editorial_summary %}
+        <div class="place-summary text-secondary fst-italic mt-2 small">{{ place.editorial_summary }}</div>
+        {% endif %}
+      </div>
+      <div class="place-actions d-flex gap-2 align-items-center mt-2">
+        <button class="save-btn btn btn-sm" 
+                data-place='{{ {
+                    "id": place.place_id,
+                    "name": place.name,
+                    "address": place.address,
+                    "city": city,
+                    "latitude": place.location.lat,
+                    "longitude": place.location.lng,
+                    "editorial_summary": place.editorial_summary,
+                    "open_hours": place.open_hours
+                } | tojson }}'
+                onclick="savePlace(this)" 
+                title="Save place">★</button>
+        <a href="https://www.google.com/maps/search/?api=1&query={{ place.location.lat }},{{ place.location.lng }}" 
+           target="_blank" 
+           class="btn btn-sm text-white" style="background: #ea4335; font-size: 12px;">Google Maps</a>
+      </div>
     </div>
+    {% endfor %}
+  </div>
 
-    <script>
-        let map;
-        let markers = {};
-        let infoWindows = {};
+  <div id="map" class="flex-grow-1 border rounded" style="min-height: 500px;"></div>
+</div>
+</div>
 
-        function savePlace(buttonElement) {
-            const place = JSON.parse(buttonElement.dataset.place);
+<script>
+let map;
+let markers = {};
+let infoWindows = {};
 
-            buttonElement.disabled = true;
-            buttonElement.style.opacity = '0.5';
+function savePlace(buttonElement) {
+  const place = JSON.parse(buttonElement.dataset.place);
+  buttonElement.disabled = true;
+  buttonElement.style.opacity = '0.5';
 
             fetch('/save_place', {
                 method: 'POST',
@@ -116,125 +106,117 @@
             });
         }
 
-        function focusOnMarker(placeId) {
-            const marker = markers[placeId];
-            if (marker) {
-                map.setCenter(marker.getPosition());
-                map.setZoom(16);
-                
-                const infoWindow = infoWindows[placeId];
-                if (infoWindow) {
-                    Object.values(infoWindows).forEach(iw => iw.close());
-                    infoWindow.open(map, marker);
-                }
-                
-                document.querySelectorAll('.place-item').forEach(item => {
-                    item.classList.remove('highlighted');
-                });
-                const placeItem = document.querySelector(`[data-place-id="${placeId}"]`);
-                if (placeItem) {
-                    placeItem.classList.add('highlighted');
-                    placeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-                
-                marker.setAnimation(google.maps.Animation.BOUNCE);
-                setTimeout(() => {
-                    marker.setAnimation(null);
-                }, 2000);
-            }
+function focusOnMarker(placeId) {
+  const marker = markers[placeId];
+  if (marker) {
+    map.setCenter(marker.getPosition());
+    map.setZoom(16);
+
+    const infoWindow = infoWindows[placeId];
+    if (infoWindow) {
+      Object.values(infoWindows).forEach(iw => iw.close());
+      infoWindow.open(map, marker);
+    }
+
+    document.querySelectorAll('.place-item').forEach(item => {
+      item.classList.remove('highlighted');
+    });
+    const placeItem = document.querySelector(`[data-place-id="${placeId}"]`);
+    if (placeItem) {
+      placeItem.classList.add('highlighted');
+      placeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    marker.setAnimation(google.maps.Animation.BOUNCE);
+    setTimeout(() => {
+      marker.setAnimation(null);
+    }, 2000);
+  }
+}
+
+function createInfoWindowContent(place) {
+  const summary = place.editorial_summary || 'No description available';
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${place.location.lat},${place.location.lng}`;
+
+  return `
+    <div class="custom-info-window" style="font-size: 1rem;">
+        <div class="info-title fw-bold mb-1" style="font-size: 1.1rem;">${place.name}</div>
+        <div class="info-address text-muted mb-2" style="font-size: 0.95rem;">${place.address}</div>
+        <div class="info-summary mb-2" style="font-size: 0.95rem;">${summary}</div>
+        <div class="info-actions d-flex justify-content-between align-items-center">
+            <a href="${mapsUrl}" target="_blank" class="btn btn-sm btn-outline-primary" style="font-size: 0.9rem;">Open in Maps</a>
+        </div>
+    </div>
+  `;
+}
+
+const locationsData = {{ places | tojson | safe }};
+
+function initMap() {
+  const mapElement = document.getElementById("map");
+  map = new google.maps.Map(mapElement, {
+    zoom: 12,
+    gestureHandling: 'greedy'
+  });
+
+  const bounds = new google.maps.LatLngBounds();
+
+  locationsData.forEach(loc => {
+    if (loc && loc.location) {
+      const marker = new google.maps.Marker({
+        position: { lat: loc.location.lat, lng: loc.location.lng },
+        map: map,
+        title: loc.name,
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 0C6.7 0 0 6.7 0 15c0 11.25 15 25 15 25s15-13.75 15-25C30 6.7 23.3 0 15 0z" fill="#EA4335"/>
+              <circle cx="15" cy="15" r="8" fill="white"/>
+            </svg>
+          `),
+          scaledSize: new google.maps.Size(30, 40),
+          anchor: new google.maps.Point(15, 40)
         }
+      });
 
-        function createInfoWindowContent(place) {
-            const summary = place.editorial_summary || 'No description available';
-            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${place.location.lat},${place.location.lng}`;
-            
-            return `
-                <div class="custom-info-window">
-                    <div class="info-title">${place.name}</div>
-                    <div class="info-address">${place.address}</div>
-                    <div class="info-summary">${summary}</div>
-                    <div class="info-actions">
-                        <a href="${mapsUrl}" target="_blank" class="info-maps-link">Open in Maps</a>
-                        <button class="info-save-btn" onclick="savePlace(this)" 
-                                data-place='${JSON.stringify(place)}'>Save Place</button>
-                    </div>
-                </div>
-            `;
+      const infoWindow = new google.maps.InfoWindow({
+        content: createInfoWindowContent(loc)
+      });
+
+      marker.addListener("click", () => {
+        Object.values(infoWindows).forEach(iw => iw.close());
+        infoWindow.open(map, marker);
+
+        document.querySelectorAll('.place-item').forEach(item => item.classList.remove('highlighted'));
+        const placeItem = document.querySelector(`[data-place-id="${loc.place_id}"]`);
+        if (placeItem) {
+          placeItem.classList.add('highlighted');
+          placeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+      });
 
-        const locationsData = {{ places | tojson | safe }};
+      markers[loc.place_id] = marker;
+      infoWindows[loc.place_id] = infoWindow;
+      bounds.extend(marker.getPosition());
+    }
+  });
 
-        function initMap() {
-            const mapElement = document.getElementById("map");
-            
-            map = new google.maps.Map(mapElement, { 
-                zoom: 12, 
-                gestureHandling: 'greedy' 
-            });
-            
-            const bounds = new google.maps.LatLngBounds();
-            const locations = locationsData;
-            
-            locations.forEach(loc => {
-                if (loc && loc.location) {
-                    const marker = new google.maps.Marker({
-                        position: { lat: loc.location.lat, lng: loc.location.lng },
-                        map: map,
-                        title: loc.name,
-                        icon: {
-                            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                                <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M15 0C6.7 0 0 6.7 0 15c0 11.25 15 25 15 25s15-13.75 15-25C30 6.7 23.3 0 15 0z" fill="#EA4335"/>
-                                    <circle cx="15" cy="15" r="8" fill="white"/>
-                                    <text x="15" y="20" text-anchor="middle" font-size="14" fill="#EA4335">📍</text>
-                                </svg>
-                            `),
-                            scaledSize: new google.maps.Size(30, 40),
-                            anchor: new google.maps.Point(15, 40)
-                        }
-                    });
+  if (locationsData.length > 0) {
+    map.fitBounds(bounds);
+    if (locationsData.length === 1) {
+      map.setZoom(15);
+    }
+  } else {
+    map.setCenter({ lat: 40.7128, lng: -74.0060 });
+    map.setZoom(12);
+  }
+}
 
-                    const infoWindow = new google.maps.InfoWindow({
-                        content: createInfoWindowContent(loc)
-                    });
-
-                    marker.addListener("click", () => {
-                        Object.values(infoWindows).forEach(iw => iw.close());
-                        infoWindow.open(map, marker);
-                        
-                        document.querySelectorAll('.place-item').forEach(item => {
-                            item.classList.remove('highlighted');
-                        });
-                        const placeItem = document.querySelector(`[data-place-id="${loc.place_id}"]`);
-                        if (placeItem) {
-                            placeItem.classList.add('highlighted');
-                            placeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                    });
-
-                    markers[loc.place_id] = marker;
-                    infoWindows[loc.place_id] = infoWindow;
-
-                    bounds.extend(marker.getPosition());
-                }
-            });
-
-            if (locations.length > 0) {
-                map.fitBounds(bounds);
-                if (locations.length === 1) {
-                    map.setZoom(15);
-                }
-            } else {
-                map.setCenter({lat: 40.7128, lng: -74.0060});
-                map.setZoom(12);
-            }
-        }
-        
-        window.addEventListener('load', function() {
-            if (typeof google !== 'undefined' && google.maps) {
-                initMap();
-            }
-        });
-    </script>
-    <script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap"></script>
+window.addEventListener('load', function() {
+  if (typeof google !== 'undefined' && google.maps) {
+    initMap();
+  }
+});
+</script>
+<script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap"></script>
 {% endblock %}
