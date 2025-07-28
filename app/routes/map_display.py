@@ -7,13 +7,10 @@ from app.api.weather_api import get_weather
 from app.models.db_utils import save_place, get_user_places, delete_place
 from app.models.models import Place
 from datetime import datetime, timedelta
-<<<<<<< HEAD
 from itertools import permutations
 import json
 import random
 import colorsys
-=======
->>>>>>> main
 
 def get_random_bold_color():
     hues = [0, 30, 60, 120, 180, 210, 270, 300]
