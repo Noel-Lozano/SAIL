@@ -16,9 +16,9 @@
             </div>
         </div>
 
-        {% if places %}
+        {% if user_places %}
             <div class="places-grid">
-                {% for place in places %}
+                {% for place in user_places %}
                     <div class="place-card">
                         <div class="place-name">{{ place.name }}</div>
                         <div class="place-address">{{ place.address }}</div>

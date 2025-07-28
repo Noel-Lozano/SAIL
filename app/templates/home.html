@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block title %}Search Dashboard{% endblock %}
 {% block content %}
-<h2>Welcome, {{ session.user }}!</h2>
+<h2 style="margin-top:2rem;">Welcome, {{ session.user }}!</h2>
 <p>Search a city or destination.</p>
 
 <form method="GET" action="{{ url_for('map_display.planning') }}">
