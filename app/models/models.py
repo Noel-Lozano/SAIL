@@ -10,6 +10,8 @@ class User(db.Model):
     hashed_password = db.Column(db.String(128), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     searches = db.relationship('Search', backref='user', lazy=True)
+    interests = db.Column(db.Text, nullable=True)
+    ai_enabled = db.Column(db.Boolean, default=False)
 
 class Search(db.Model):
     id = db.Column(db.Integer, primary_key=True)
