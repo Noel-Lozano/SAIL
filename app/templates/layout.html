@@ -32,6 +32,10 @@
       background-color: #1e46aa;
       border-color: #1e46aa;
     }
+    .btn-outline-primary {
+      color: #0C318C;
+      border-color: #0C318C;
+    }
     .form-wrapper {
         display: flex;
         justify-content: center;
@@ -66,7 +70,7 @@
     </nav>
 
 
-  <div class="container mt-4">
+  <div class="container-fluid px-4">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, message in messages %}
         <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
