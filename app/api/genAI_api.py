@@ -34,22 +34,17 @@ Places:
         prompt += f"\nID {i + 1}. {place.name} in {place.city} at {place.address} ({place.latitude}, {place.longitude})"
         prompt += f"\n   Editorial Summary: {place.editorial_summary}"
 
-    # model = genai.GenerativeModel('gemma-3n-e4b-it')
-    # response = model.generate_content(prompt)
-    # print(f"[DEBUG] Generated groupings: {response.text}")
+    model = genai.GenerativeModel('gemma-3n-e4b-it')
+    response = model.generate_content(prompt)
+    print(f"[DEBUG] Generated groupings: {response.text}")
     
     # extract the groupings from the response
-    # groupings = []
-    # lines = response.text.lower().split("start")[1].strip().split("\n")
-    # for line in lines:
-    #     day, places = line.split(":")
-    #     place_ids = [int(p) for p in places.split(",")]
-    #     groupings.append(place_ids)
-
-    groupings = [
-        [1, 2],
-        [3, 4]
-    ]
+    groupings = []
+    lines = response.text.lower().split("start")[1].strip().split("\n")
+    for line in lines:
+        day, places = line.split(":")
+        place_ids = [int(p) for p in places.split(",")]
+        groupings.append(place_ids)
 
     # determine if the groupings would benefit from the sun, and what the best temperature is
     prompt = f"""
@@ -83,21 +78,17 @@ Now evaluate the following days:
             place = all_places[place_id - 1]
             prompt += f"{place.name}: {place.editorial_summary}\n"
         
-    # model = genai.GenerativeModel('gemma-3n-e4b-it')
-    # response = model.generate_content(prompt)
-    # print(f"[DEBUG] Generated groupings: {response.text}")
+    model = genai.GenerativeModel('gemma-3n-e4b-it')
+    response = model.generate_content(prompt)
+    print(f"[DEBUG] Generated groupings: {response.text}")
 
     # extract the weather preferences from the response
-    # weather_prefs = []
-    # lines = response.text.strip().split("\n")
-    # for line in lines:
-    #     if line.strip():
-    #         day, prefs = line.split(":")
-    #         sun, temp = prefs.strip().split(", ")
-    #         weather_prefs.append({ "sunny_preferred": sun.lower().strip() == "yes", "temperature": int(temp.strip()) })
-    weather_prefs = [
-        {"sunny_preferred": True, "temperature": 75},
-        {"sunny_preferred": False, "temperature": -1}
-    ]
+    weather_prefs = []
+    lines = response.text.strip().split("\n")
+    for line in lines:
+        if line.strip():
+            day, prefs = line.split(":")
+            sun, temp = prefs.strip().split(", ")
+            weather_prefs.append({ "sunny_preferred": sun.lower().strip() == "yes", "temperature": int(temp.strip()) })
 
     return groupings, weather_prefs
