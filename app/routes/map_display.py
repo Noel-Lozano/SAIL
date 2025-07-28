@@ -56,11 +56,11 @@ def planning():
 
 def optimize_groupings(all_places, groupings, weather_prefs, weather_data, start_date):
     # pair each grouping with its weather preference
+    tot_count = sum(len(day) for day in groupings)
     groupings = [(grouping, weather_prefs[i]) for i, grouping in enumerate(groupings)]
 
-    tot_count = sum(len(day) for day in groupings)
     best_permutation = None
-    best_score = 0
+    best_score = -float('inf')
 
     for permutation in permutations(groupings):
         open_percentage = 0
@@ -110,11 +110,14 @@ def optimize_groupings(all_places, groupings, weather_prefs, weather_data, start
 
         open_scale, pop_scale, cloudy_scale, temp_scale = 10, -3, -3, -2
         score = (open_percentage * open_scale) + (max_avg_popularity * pop_scale) + (cloudy_percentage * cloudy_scale) + (temperature_diff * temp_scale)
+        print(f"[DEBUG] Permutation score: {score} (Open: {open_percentage}, Pop: {max_avg_popularity}, Cloudy: {cloudy_percentage}, Temp Diff: {temperature_diff})")
         if score > best_score:
             best_score = score
             best_permutation = permutation
         
     best_permutation = [places for places, _ in best_permutation]
+    print(f"[DEBUG] Best permutation score: {best_score}")
+    print(f"[DEBUG] Best permutation: {best_permutation}")
     return best_permutation
 
 @map_display_bp.route("/itinerary")
@@ -207,7 +210,6 @@ def save_place_route():
         popularity_data = []
 
     try:
-        print(type(popularity_data), type(data.get('open_hours', '[]')))
         saved_place = save_place(
             user_id=user_id,
             name=data['name'],
@@ -217,7 +219,7 @@ def save_place_route():
             longitude=data['longitude'],
             editorial_summary=data.get('editorial_summary', ''),
             popularity_data=popularity_data,
-            open_hours=json.loads(data.get('open_hours', '[]'))
+            open_hours=data.get('open_hours', '[]')
         )
         return jsonify({"message": "Place saved successfully", "place_id": saved_place.id}), 201
     except Exception as e:
