@@ -2,35 +2,13 @@
 {% block title %}Search Dashboard{% endblock %}
 {% block content %}
 <h2>Welcome, {{ session.user }}!</h2>
-<p>Use the form below to save your travel searches.</p>
+<p>Search a city or destination.</p>
 
 <form method="GET" action="{{ url_for('map_display.planning') }}">
   <div class="mb-3">
-    <label>City</label>
-    <input name="city" class="form-control" required>
+    <!-- <label>City</label> -->
+    <input name="city" placeholder="Enter a City" class="form-control" required>
   </div>
-  <!-- <div class="mb-3">
-    <label for="start-date">Start Date</label>
-    <input type="date" id="start-date" name="start_date" class="form-control" required>
-  </div>
-  <div class="mb-3">
-    <label for="end-date">End Date</label>
-    <input type="date" id="end-date" name="end_date" class="form-control" required>
-  </div>
-
-  <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    
-    const todayStr = today.toISOString().split('T')[0];
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    
-    document.getElementById('start-date').setAttribute('min', todayStr);
-    document.getElementById('end-date').setAttribute('min', tomorrowStr);
-  });
-  </script> -->
   <button type="submit" class="btn btn-primary">Plan Trip</button>
 </form>
 {% endblock %}
