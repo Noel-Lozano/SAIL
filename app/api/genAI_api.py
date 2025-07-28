@@ -1,7 +1,6 @@
 import os
 import google.generativeai as genai
-from datetime import datetime, timedelta
-from itertools import permutations
+from datetime import datetime
 
 GEMINI_KEY = os.environ.get("GEMINI_KEY")
 if not GEMINI_KEY:
@@ -46,42 +45,59 @@ Places:
     #     day, places = line.split(":")
     #     place_ids = [int(p) for p in places.split(",")]
     #     groupings.append(place_ids)
+
     groupings = [
         [1, 2],
-        [4, 3]
+        [3, 4]
     ]
 
-    assert len(groupings) <= 10
+    # determine if the groupings would benefit from the sun, and what the best temperature is
+    prompt = f"""
+You are a smart travel planner helping optimize a multi-day itinerary based on weather preferences.
 
-    best_permutation = None
-    best_max_avg_popularity = 100
+Your task is to analyze the following list of daily activities and determine:
+1. Whether each day would benefit from **sunny weather** ("yes" or "no")
+2. The **ideal temperature** in Fahrenheit for that day’s activities, based on the type and location of places involved (use -1 if temperature isn’t important)
 
-    for permutation in permutations(groupings):
-        for i in range(len(permutation)):
-            date = start_date + timedelta(days=i)
-            weekday = date.strftime("%A")
-            weekday_number = (date.weekday() + 1) % 7
+Guidelines:
+- Consider the type of activity (e.g. outdoor vs. indoor) and its location.
+- Outdoor activities often benefit from sun and may have temperature preferences (e.g., mild or warm).
+- Indoor activities usually do not depend on sun or temperature.
 
-            all_open = True
-            max_avg_popularity = 0
+**Only output the following format. Do not include any extra explanation or commentary:**
+Day 1: yes/no, [temperature or -1]  
+Day 2: yes/no, [temperature or -1]  
 
-            for place_id in permutation[i]:
-                place = all_places[place_id - 1]
-                open24hours = place.open_hours == [] or place.open_hours == [{'open': {'day': 0, 'hour': 0, 'minute': 0}}]
-                if not open24hours and not any(day['open']['day'] == weekday_number for day in place.open_hours):
-                    all_open = False
-                    break
+Example:
+Day 1: yes, 75
+Day 2: no, -1
 
-                pop_data = next((p for p in place.popularity_data if p['name'] == weekday), None)
-                if pop_data:
-                    pop_data = [100 if x == 0 else x for x in pop_data['data']][9:]
-                    print(pop_data, place.name)
-                    max_avg_popularity = max(max_avg_popularity, sum(pop_data)/len(pop_data))
+Even if you include explanations, each answer line must be clearly formatted as shown.
 
-        print(permutation, max_avg_popularity, all_open)
-        if all_open and max_avg_popularity < best_max_avg_popularity:
-            best_max_avg_popularity = max_avg_popularity
-            best_permutation = permutation
-            print(f"[DEBUG] New best permutation found: {best_permutation} with max avg popularity {best_max_avg_popularity}")
+Now evaluate the following days:
+"""
 
-    # return grouped_places
+    for i, day in enumerate(groupings):
+        prompt += f"\nDay {i + 1}:\n"
+        for place_id in day:
+            place = all_places[place_id - 1]
+            prompt += f"{place.name}: {place.editorial_summary}\n"
+        
+    # model = genai.GenerativeModel('gemma-3n-e4b-it')
+    # response = model.generate_content(prompt)
+    # print(f"[DEBUG] Generated groupings: {response.text}")
+
+    # extract the weather preferences from the response
+    # weather_prefs = []
+    # lines = response.text.strip().split("\n")
+    # for line in lines:
+    #     if line.strip():
+    #         day, prefs = line.split(":")
+    #         sun, temp = prefs.strip().split(", ")
+    #         weather_prefs.append({ "sunny_preferred": sun.lower().strip() == "yes", "temperature": int(temp.strip()) })
+    weather_prefs = [
+        {"sunny_preferred": True, "temperature": 75},
+        {"sunny_preferred": False, "temperature": -1}
+    ]
+
+    return groupings, weather_prefs

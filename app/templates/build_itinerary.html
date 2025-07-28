@@ -1,0 +1,191 @@
+{% extends "layout.html" %}
+{% block title %}Build Your Itinerary{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('map_display.planning') }}" class="btn btn-link mb-3">← Back to Planning</a>
+
+<h2 class="fw-bold mb-4">Build Your Itinerary</h2>
+
+<form method="GET" action="" class="d-flex flex-wrap align-items-center justify-content-center gap-3 mb-4">
+    <div class="d-flex align-items-center gap-2">
+        <label for="start_date" class="mb-0">Start:</label>
+        <input type="date" id="start_date" name="start_date" class="form-control" required value="{{ start_date }}" style="min-width: 170px;">
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        <label for="end_date" class="mb-0">End:</label>
+        <input type="date" id="end_date" name="end_date" class="form-control" required value="{{ end_date }}" style="min-width: 170px;">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Generate</button>
+</form>
+
+{% if itinerary %}
+  <div class="d-flex gap-4" style="height: 500px;">
+    <div class="itinerary-list overflow-auto flex-shrink-1" style="width: 35%; border: 1px solid #ddd; border-radius: 5px; padding: 10px;">
+      {% for day in itinerary %}
+        <div class="day-section mb-4" data-day-index="{{ loop.index0 }}">
+          <h5>{{ day.date }}</h5>
+          {% if day.places %}
+            {% set day_index = loop.index0 %}
+            {% for place in day.places %}
+              <div class="place-item mb-2 p-2 border rounded" 
+                   data-place-id="{{ place.place_id }}" 
+                   data-day-index="{{ day_index }}"
+                   style="cursor: pointer;">
+                <div class="fw-bold">{{ place.name }}</div>
+                <div class="text-muted" style="font-size: 0.9rem;">{{ place.address }}</div>
+                {% if place.editorial_summary %}
+                  <div class="text-secondary fst-italic" style="font-size: 0.85rem;">{{ place.editorial_summary }}</div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted fst-italic">No places assigned yet.</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div id="map" style="flex-grow: 1; border: 1px solid #ddd; border-radius: 5px;"></div>
+  </div>
+{% else %}
+  <div class="text-center mt-5">
+    <h4>No itinerary yet</h4>
+    <p>Set your dates to generate an itinerary.</p>
+  </div>
+{% endif %}
+
+<script>
+  let map;
+  let markers = {};
+  let infoWindows = {};
+
+  // all_places from backend, with place.color available
+  const all_places = {{ all_places | tojson | safe }};
+
+  // Build a map from place_id to place for fast lookup
+  const placeById = {};
+  all_places.forEach(p => {
+    placeById[p.place_id] = p;
+  });
+
+  function createMarkerIcon(color) {
+    const svg = `
+      <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 0C6.7 0 0 6.7 0 15c0 11.25 15 25 15 25s15-13.75 15-25C30 6.7 23.3 0 15 0z" fill="${color || '#0c318c'}"/>
+        <circle cx="15" cy="15" r="8" fill="white"/>
+      </svg>
+    `;
+    return {
+      url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+      scaledSize: new google.maps.Size(30, 40),
+      anchor: new google.maps.Point(15, 40)
+    };
+  }
+
+  function createInfoWindowContent(place) {
+    const summary = place.editorial_summary || 'No description available';
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
+    return `
+      <div style="max-width:250px;">
+        <strong>${place.name}</strong><br/>
+        <small class="text-muted">${place.address}</small><br/>
+        <p style="font-size: 0.9rem; margin-top: 5px;">${summary}</p>
+        <a href="${mapsUrl}" target="_blank" style="color:#0c318c;">Open in Google Maps</a>
+      </div>
+    `;
+  }
+
+  function highlightPlace(placeId) {
+    document.querySelectorAll('.place-item').forEach(el => {
+      el.classList.toggle('bg-warning', el.dataset.placeId === placeId);
+    });
+  }
+
+  function focusOnMarker(placeId) {
+    const marker = markers[placeId];
+    if (marker) {
+      map.setCenter(marker.getPosition());
+      map.setZoom(15);
+
+      Object.values(infoWindows).forEach(iw => iw.close());
+      infoWindows[placeId].open(map, marker);
+
+      highlightPlace(placeId);
+      const placeEl = document.querySelector(`.place-item[data-place-id="${placeId}"]`);
+      if (placeEl) placeEl.scrollIntoView({behavior: 'smooth', block: 'center'});
+
+      marker.setAnimation(google.maps.Animation.BOUNCE);
+      setTimeout(() => marker.setAnimation(null), 1400);
+    }
+  }
+
+  function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 12,
+      gestureHandling: 'greedy'
+    });
+
+    const bounds = new google.maps.LatLngBounds();
+
+    all_places.forEach(place => {
+
+      const color = place.color || '#0c318c';
+
+      const marker = new google.maps.Marker({
+        position: {lat: place.latitude, lng: place.longitude},
+        map: map,
+        title: place.name,
+        icon: createMarkerIcon(color)
+      });
+
+      const infoWindow = new google.maps.InfoWindow({
+        content: createInfoWindowContent(place)
+      });
+
+      marker.addListener('click', () => {
+        Object.values(infoWindows).forEach(iw => iw.close());
+        infoWindow.open(map, marker);
+
+        highlightPlace(place.place_id);
+
+        const placeEl = document.querySelector(`.place-item[data-place-id="${place.place_id}"]`);
+        if (placeEl) placeEl.scrollIntoView({behavior: 'smooth', block: 'center'});
+      });
+
+      markers[place.place_id] = marker;
+      infoWindows[place.place_id] = infoWindow;
+
+      bounds.extend(marker.getPosition());
+    });
+
+    if (!bounds.isEmpty()) {
+      map.fitBounds(bounds);
+      if (all_places.length === 1) {
+        map.setZoom(15);
+      }
+    } else {
+      map.setCenter({lat: 40.7128, lng: -74.0060});
+      map.setZoom(12);
+    }
+  }
+
+  window.addEventListener('load', () => {
+    if (typeof google !== 'undefined' && google.maps) {
+      initMap();
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (e.target.closest('.place-item')) {
+      const placeId = e.target.closest('.place-item').dataset.placeId;
+      if (placeId) {
+        focusOnMarker(placeId);
+      }
+    }
+  });
+</script>
+
+<script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap"></script>
+{% endblock %}

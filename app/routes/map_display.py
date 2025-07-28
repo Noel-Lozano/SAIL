@@ -1,11 +1,27 @@
 import os
 from flask import render_template, request, Blueprint, jsonify, session
+from numpy import place
 from app.api.map_api import get_places_from_city, get_popularity
 from app.api.genAI_api import generate_groupings
+from app.api.weather_api import get_weather
 from app.models.db_utils import save_place, get_user_places, delete_place
 from app.models.models import Place
-from datetime import datetime
+from datetime import datetime, timedelta
+from itertools import permutations
 import json
+import random
+import colorsys
+
+def get_random_bold_color():
+    hues = [0, 30, 60, 120, 180, 210, 270, 300]
+    h = random.choice(hues) / 360.0
+    s = 1.0
+    l = random.uniform(0.4, 0.5)
+
+    r, g, b = colorsys.hls_to_rgb(h, l, s)
+    r, g, b = int(r * 255), int(g * 255), int(b * 255)
+
+    return f'rgb({r}, {g}, {b})'
 
 map_display_bp = Blueprint('map_display', __name__)
 
@@ -20,6 +36,69 @@ def planning():
 
     return render_template("planning.html", places=places, google_maps_api_key=FRONTEND_MAP_API, city=city, place=place)
 
+def optimize_groupings(all_places, groupings, weather_prefs, weather_data, start_date):
+    # pair each grouping with its weather preference
+    groupings = [(grouping, weather_prefs[i]) for i, grouping in enumerate(groupings)]
+
+    tot_count = sum(len(day) for day in groupings)
+    best_permutation = None
+    best_score = 0
+
+    for permutation in permutations(groupings):
+        open_percentage = 0
+
+        max_avg_popularity = 0
+
+        cloudy_percentage = 0
+        cloudy_days = 0
+
+        temperature_diff = 0
+        temperature_days = 0
+
+
+        for i, (places, weather_pref) in enumerate(permutation):
+            date = start_date + timedelta(days=i)
+            weekday = date.strftime("%A")
+            weekday_number = (date.weekday() + 1) % 7
+
+            for place_id in places:
+                place = all_places[place_id - 1]
+
+                # Check if the place is open on the current day
+                open24hours = place.open_hours == [] or place.open_hours == [{'open': {'day': 0, 'hour': 0, 'minute': 0}}]
+                if open24hours or any(day['open']['day'] == weekday_number for day in place.open_hours):
+                    open_percentage += 100/tot_count
+
+                # Check popularity data
+                pop_data = next((p for p in place.popularity_data if p['name'] == weekday), None)
+                if pop_data:
+                    pop_data = [100 if x == 0 else x for x in pop_data['data']][9:]
+                    max_avg_popularity = max(max_avg_popularity, sum(pop_data)/len(pop_data))
+
+            # Check cloudy weather preference
+            if weather_pref['sunny_preferred']:
+                cloudy_percentage += weather_data[i]['avg_cloud']
+                cloudy_days += 1
+
+            # Check temperature preference
+            if weather_pref['temperature'] != -1:
+                avg_fahrenheit = weather_data[i]['avg_temp'] * 9/5 + 32
+                temperature_diff += abs(avg_fahrenheit - weather_pref['temperature'])
+                temperature_days += 1
+
+        cloudy_percentage = cloudy_percentage / cloudy_days if cloudy_days > 0 else 0
+        # Scale temperature diff as percent of max possible diff (60 degrees)
+        temperature_diff = (temperature_diff / (60 * temperature_days)) * 100 if temperature_days > 0 else 0
+
+        open_scale, pop_scale, cloudy_scale, temp_scale = 10, -3, -3, -2
+        score = (open_percentage * open_scale) + (max_avg_popularity * pop_scale) + (cloudy_percentage * cloudy_scale) + (temperature_diff * temp_scale)
+        if score > best_score:
+            best_score = score
+            best_permutation = permutation
+        
+    best_permutation = [places for places, _ in best_permutation]
+    return best_permutation
+
 @map_display_bp.route("/itinerary")
 def itinerary():
     if 'user_id' not in session:
@@ -27,18 +106,49 @@ def itinerary():
     
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
+    print(f"[DEBUG] Itinerary request: start_date={start_date}, end_date={end_date}")
 
     user_id = session['user_id']
     all_places = get_user_places(user_id=user_id)
 
+    dict_places = [place.__dict__ for place in all_places]
+    for place in dict_places: place.pop('_sa_instance_state')
+
+    itinerary = []
     if start_date and end_date:
-        generate_groupings(all_places, start_date, end_date)
-    
-    return render_template("itinerary.html",
-                         places=all_places,
-                         total_places=len(all_places),
-                         start_date=start_date,
-                         end_date=end_date)
+        groupings, weather_prefs = generate_groupings(all_places, start_date, end_date)
+        weather_data = get_weather(all_places[0].city, start_date, end_date)
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        best_permutation = optimize_groupings(all_places, groupings, weather_prefs, weather_data, start_date)
+
+        unused_places = set(range(1, len(all_places) + 1)) - {place_id for day in best_permutation for place_id in day}
+        for i, day in enumerate(best_permutation):
+            date = start_date + timedelta(days=i)
+            itinerary.append({
+                "date": date.strftime("%A, %B %d").replace(" 0", " "),
+                "places": [dict_places[place_id - 1] for place_id in day]
+            })
+
+        if unused_places:
+            unused_places_list = [dict_places[place_id - 1] for place_id in unused_places]
+            itinerary.append({
+                "date": "Unassigned",
+                "places": unused_places_list
+            })
+    else:
+        itinerary = [{"date": "Unassigned", "places": dict_places}]
+
+    for day in itinerary:
+        day['color'] = get_random_bold_color()
+        for place in day['places']:
+            place['color'] = day['color']
+
+    return render_template("build_itinerary.html",
+                         itinerary=itinerary,
+                         all_places=dict_places,
+                         start_date=start_date.strftime("%Y-%m-%d") if start_date else None,
+                         end_date=end_date,
+                         google_maps_api_key=FRONTEND_MAP_API)
 
 @map_display_bp.route("/save_place", methods=['POST'])
 def save_place_route():
