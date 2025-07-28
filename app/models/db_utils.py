@@ -33,13 +33,13 @@ def save_search(user_id, data):
     db.session.commit()
 
 def get_user_searches(user_id):
-    return Search.query.filter_by(user_id=user_id).order_by(Search.created_at.desc()).all()
+    return Search.query.filter_by(user_id=user_id).all()
 
 def clear_user_searches(user_id):
     Search.query.filter_by(user_id=user_id).delete()
     db.session.commit()
 
-def save_place(user_id, name, city, address, latitude, longitude, editorial_summary):
+def save_place(user_id, name, city, address, latitude, longitude, editorial_summary, popularity_data, open_hours):
     place = Place(
         user_id=user_id,
         name=name,
@@ -47,7 +47,9 @@ def save_place(user_id, name, city, address, latitude, longitude, editorial_summ
         address=address,
         latitude=latitude,
         longitude=longitude,
-        editorial_summary=editorial_summary or "No summary provided"
+        editorial_summary=editorial_summary or "No summary provided",
+        popularity_data=popularity_data,
+        open_hours=open_hours or []
     )
     db.session.add(place)
     db.session.commit()
@@ -60,7 +62,7 @@ def get_user_places(user_id, city=None):
     if city:
         query = query.filter(Place.city == city)
 
-    return query.order_by(Place.created_at.desc()).all()
+    return query.all()
 
 def delete_place(place_id):
     """Delete a place by ID"""
@@ -80,8 +82,8 @@ def get_place_by_id(place_id, user_id=None):
 
 def get_user_places_by_city(user_id):
     """Get user's places grouped by city"""
-    places = Place.query.filter_by(user_id=user_id).order_by(Place.city, Place.created_at.desc()).all()
-    
+    places = Place.query.filter_by(user_id=user_id).order_by(Place.city).all()
+
     places_by_city = {}
     for place in places:
         if place.city not in places_by_city:
