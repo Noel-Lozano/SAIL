@@ -53,7 +53,8 @@
                                 "city": city,
                                 "latitude": place.location.lat,
                                 "longitude": place.location.lng,
-                                "editorial_summary": place.editorial_summary
+                                "editorial_summary": place.editorial_summary,
+                                "open_hours": place.open_hours
                             } | tojson }}'
                             onclick="savePlace(this)" 
                             title="Save place">
