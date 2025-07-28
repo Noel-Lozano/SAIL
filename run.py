@@ -21,10 +21,11 @@ db.init_app(app)
 from app.models.models import Place
 
 with app.app_context():
-    # Place.__table__.drop(db.engine, checkfirst=True)
+    Place.__table__.drop(db.engine, checkfirst=True)
     db.create_all()
 
-# app.register_blueprint(map_display_bp)
+    #app.register_blueprint(map_display_bp)
+    
 
 # ROUTES
 @app.route('/')
