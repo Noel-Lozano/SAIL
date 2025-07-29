@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, session, flash, url_for, Flask
 from flask_sqlalchemy import SQLAlchemy
-from app.models.models import db, User, Search
+from app.models.models import db, User, Search, Place, Itinerary
 from app.models.db_utils import create_user, validate_user_login, save_search, get_user_searches, clear_user_searches
 from app.routes.map_display import map_display_bp
 from datetime import timedelta

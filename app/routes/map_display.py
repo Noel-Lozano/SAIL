@@ -45,6 +45,7 @@ def planning():
                            google_maps_api_key=FRONTEND_MAP_API,
                            city=city, 
                            place=place, 
+                           user_places=user_places,
                            total_places=len(user_places))
 
 def optimize_groupings(all_places, groupings, weather_prefs, weather_data, start_date):
@@ -186,7 +187,7 @@ def cart():
     all_places = get_user_places(user_id=user_id)
 
     return render_template("cart.html",
-                         places=all_places,
+                         user_places=all_places,
                          total_places=len(all_places))
 
 @map_display_bp.route("/save_itinerary", methods=['POST'])

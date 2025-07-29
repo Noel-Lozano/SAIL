@@ -1,22 +1,24 @@
 {% extends "layout.html" %}
 {% block title %}Planning{% endblock %}
 {% block content %}
-<div class="ms-3">
-<h2 class="fw-bold my-4">Places to Visit in {{ city }}</h2>
+    <h2 class="fw-bold" style="margin-top: 3rem; margin-bottom:1rem;">Results for: {{ city }}</h2>
 
-<div class="d-flex justify-content-between align-items-center flex-wrap mb-3 gap-3">
-  <form action="/planning" method="get" class="d-flex flex-wrap align-items-center gap-2">
-    <input type="text" name="city" placeholder="Enter city" value="{{ city }}" class="form-control" style="min-width: 200px;">
-    <input type="text" name="place" placeholder="Enter place (optional)" value="{{ place }}" class="form-control" style="min-width: 200px;">
-    <button type="submit" class="btn btn-primary">Search</button>
-  </form>
-  <div id="cart-icon-container" class="ms-auto position-relative">
-    <a href="/cart" class="cart-icon">
-      <img src="{{ url_for('static', filename='images/cart.png') }}" alt="Cart" style="width: 30px; height: 30px;">
-      <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ total_places }}</span>
-    </a>
-  </div>
-</div>
+    <div class="search-form d-flex justify-content-between align-items-center" style="gap: 1rem; flex-wrap: nowrap; margin-bottom: 1rem;">
+        <form action="/planning" method="get" class="d-flex align-items-center" style="gap: 0.5rem; flex-grow: 1; margin: 0;">
+            <input type="text" name="city" placeholder="Where to?" value="{{ city }}" class="form-control" style="min-width: 0; height: 95%;">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+
+        <div id="cart-icon-container" style="position: relative; flex-shrink: 0;">
+            <a href="/cart" class="cart-icon d-inline-block">
+                <img src="{{ url_for('static', filename='images/cart.png') }}" alt="Cart" style="width: 30px; height: 30px;">
+                <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                  {{ total_places }}
+                </span>
+            </a>
+        </div>
+    </div>
+
 
 <div class="d-flex flex-column flex-md-row gap-4" style="height: calc(100vh - 180px); margin-bottom: 2rem;">
   <div class="places-list overflow-auto" style="width: 35%;">
@@ -65,37 +67,37 @@ function savePlace(buttonElement) {
   buttonElement.disabled = true;
   buttonElement.style.opacity = '0.5';
 
-  fetch('/save_place', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(place)
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.message) {
-      buttonElement.classList.add('saved');
-      buttonElement.title = 'Place saved!';
-      const original = buttonElement.innerHTML;
-      buttonElement.innerHTML = '✅';
-
-      const cartCountElem = document.getElementById('cart-count');
-      if (cartCountElem) {
-        const currentCount = parseInt(cartCountElem.textContent) || 0;
-        cartCountElem.textContent = currentCount + 1;
-      }
-    } else {
-      alert(data.error || 'Error saving place');
-    }
-  })
-  .catch(err => {
-    console.error('Error saving place:', err);
-    alert('Error saving place');
-  })
-  .finally(() => {
-    buttonElement.disabled = false;
-    buttonElement.style.opacity = '1';
-  });
-}
+            fetch('/save_place', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(place)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.message) {
+                    buttonElement.classList.add('saved');
+                    buttonElement.title = 'Place saved!';
+                    const original = buttonElement.innerHTML;
+                    buttonElement.innerHTML = '✔️';
+                    
+                    const cartCountElem = document.getElementById('cart-count');
+                    if (cartCountElem) {
+                        const currentCount = parseInt(cartCountElem.textContent) || 0;
+                        cartCountElem.textContent = currentCount + 1;
+                    }
+                } else {
+                    alert(data.error || 'Error saving place');
+                }
+            })
+            .catch(err => {
+                console.error('Error saving place:', err);
+                alert('Error saving place');
+            })
+            .finally(() => {
+                buttonElement.disabled = false;
+                buttonElement.style.opacity = '1';
+            });
+        }
 
 function focusOnMarker(placeId) {
   const marker = markers[placeId];
