@@ -259,24 +259,62 @@ def save_place_route():
     if not isinstance(open_hours, list):
         open_hours = []
 
+    # Initialize variables
+    popularity_data = []
+    place_id = data.get('id') or data.get('place_id')
+
+    # Handle AI-recommended places (they don't have Google place_id initially)
+    if not place_id:
+        print(f"[DEBUG] AI recommendation detected: {data.get('name')} in {data.get('city')}")
+        # Search for the place using Google Places API
+        google_results = get_places_from_city(data['city'], data['name'], page_n=1)
+        
+        if google_results:
+            # Use the improved matching function
+            best_match = find_best_match(data['name'], google_results)
+            print(f"[DEBUG] Best match found: {best_match['name']} (original: {data['name']})")
+            
+            # Update data with Google Places information
+            data.update({
+                "name": best_match['name'],
+                "address": best_match['address'],
+                "latitude": best_match["location"]["lat"],
+                "longitude": best_match["location"]["lng"],
+                "editorial_summary": best_match.get('editorial_summary', data.get('editorial_summary', '')),
+                "open_hours": best_match.get('open_hours', []),
+                "place_id": best_match['place_id'],
+            })
+            
+            place_id = best_match['place_id']
+            open_hours = best_match.get('open_hours', [])
+            
+            print(f"[DEBUG] Updated AI recommendation with Google data: {data['name']}")
+        else:
+            print(f"[DEBUG] No Google results found for AI recommendation: {data['name']}")
+            # Keep original AI recommendation data if no Google match found
+
+    # Get popularity data if we have a place_id
+    if place_id:
+        print(f"[DEBUG] Fetching popularity data for place_id: {place_id}")
+        try:
+            popularity_data = get_popularity(place_id)
+        except Exception as e:
+            print(f"[DEBUG] Failed to get popularity data: {e}")
+            popularity_data = []
+
     # Check if place already exists for this user
+    # Use more flexible matching for coordinates (round to avoid floating point precision issues)
     existing_place = Place.query.filter_by(
         user_id=user_id,
         name=data['name'],
-        city=data['city'],
-        latitude=data['latitude'],
-        longitude=data['longitude']
+        city=data['city']
+    ).filter(
+        Place.latitude.between(data['latitude'] - 0.001, data['latitude'] + 0.001),
+        Place.longitude.between(data['longitude'] - 0.001, data['longitude'] + 0.001)
     ).first()
     
     if existing_place:
         return jsonify({"error": "Place already saved"}), 400
-
-    place_id = data.get('id', None)
-    if place_id:
-        print("DEBUG: Fetching popularity data for place_id:", place_id)
-        popularity_data = get_popularity(place_id)
-    else:
-        popularity_data = []
 
     try:
         saved_place = save_place(
@@ -292,6 +330,7 @@ def save_place_route():
         )
         return jsonify({"message": "Place saved successfully", "place_id": saved_place.id}), 201
     except Exception as e:
+        print(f"[DEBUG] Error saving place: {e}")
         return jsonify({"error": "Failed to save place"}), 500
 
 @map_display_bp.route("/delete_place/<int:place_id>", methods=['DELETE'])
@@ -312,3 +351,86 @@ def delete_place_route(place_id):
         return jsonify({"message": "Place deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": "Failed to delete place"}), 500
+    
+# helper function for better place matching
+
+def find_best_match(ai_place_name, google_results):
+    """
+    Find the best matching Google place for an AI recommendation
+    """
+    if not google_results:
+        return None
+    
+    ai_name_lower = ai_place_name.lower().strip()
+    
+    # First, try exact match
+    for result in google_results:
+        if result['name'].lower().strip() == ai_name_lower:
+            return result
+    
+    # Then try partial matches
+    for result in google_results:
+        result_name_lower = result['name'].lower().strip()
+        # Check if AI name is contained in result name or vice versa
+        if ai_name_lower in result_name_lower or result_name_lower in ai_name_lower:
+            return result
+    
+    # Finally, try word-based matching
+    ai_words = set(ai_name_lower.split())
+    best_match = None
+    best_score = 0
+    
+    for result in google_results:
+        result_words = set(result['name'].lower().strip().split())
+        # Calculate Jaccard similarity
+        intersection = ai_words.intersection(result_words)
+        union = ai_words.union(result_words)
+        
+        if len(union) > 0:
+            score = len(intersection) / len(union)
+            if score > best_score and score > 0.3:  # Minimum similarity threshold
+                best_score = score
+                best_match = result
+    
+    # If we found a good match, return it; otherwise return the first result
+    return best_match if best_match else google_results[0]
+
+# debugging route to help troubleshoot
+@map_display_bp.route("/debug_ai_place", methods=['POST'])
+def debug_ai_place():
+    """Debug endpoint to check AI place matching"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Not logged in"}), 401
+    
+    data = request.get_json()
+    place_name = data.get('name')
+    city = data.get('city')
+    
+    if not place_name or not city:
+        return jsonify({"error": "Missing name or city"}), 400
+    
+    # Search for the place
+    google_results = get_places_from_city(city, place_name, page_n=1)
+    
+    debug_info = {
+        "ai_place_name": place_name,
+        "city": city,
+        "google_results_count": len(google_results) if google_results else 0,
+        "google_results": [
+            {
+                "name": r['name'],
+                "address": r['address'],
+                "place_id": r['place_id']
+            } for r in (google_results[:3] if google_results else [])
+        ]
+    }
+    
+    if google_results:
+        best_match = find_best_match(place_name, google_results)
+        debug_info["best_match"] = {
+            "name": best_match['name'],
+            "address": best_match['address'],
+            "place_id": best_match['place_id']
+        }
+    
+    return jsonify(debug_info)
