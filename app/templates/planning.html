@@ -2,6 +2,8 @@
 {% block title %}Planning{% endblock %}
 {% block content %}
     <h2 class="fw-bold" style="margin-top: 3rem; margin-bottom:1rem;">Results for: {{ city }}</h2>
+    <div id="cart-panel-container" class="cart-container" style="position: fixed; top: 0; right: 0; width: 400px; height: 100vh; background: white; box-shadow: -2px 0 10px rgba(0,0,0,0.2); overflow-y: auto; z-index: 9999; display: none;">
+    </div>
 
     <div class="search-form d-flex justify-content-between align-items-center" style="gap: 1rem; flex-wrap: nowrap; margin-bottom: 1rem;">
         <form action="/planning" method="get" class="d-flex align-items-center" style="gap: 0.5rem; flex-grow: 1; margin: 0;">
@@ -78,7 +80,6 @@ function savePlace(buttonElement) {
                     buttonElement.classList.add('saved');
                     buttonElement.title = 'Place saved!';
                     const original = buttonElement.innerHTML;
-                    buttonElement.innerHTML = '✔️';
                     
                     const cartCountElem = document.getElementById('cart-count');
                     if (cartCountElem) {
@@ -210,6 +211,67 @@ window.addEventListener('load', function() {
     initMap();
   }
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+    const cartIcon = document.querySelector(".cart-icon");
+    const cartContainer = document.getElementById("cart-panel-container");
+
+    cartIcon.addEventListener("click", (e) => {
+        e.preventDefault();
+        fetch("/cart", { headers: { "X-Requested-With": "XMLHttpRequest" } })
+            .then(res => res.text())
+            .then(html => {
+                cartContainer.innerHTML = html;
+                cartContainer.style.display = "block";
+
+                const closeBtn = document.getElementById("close-cart");
+                if (closeBtn) {
+                    closeBtn.addEventListener("click", () => {
+                        cartContainer.style.display = "none";
+                    });
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load cart:", err);
+                alert("Could not load cart");
+            });
+    });
+});
+
+function deletePlace(placeId, buttonElement) {
+    if (!confirm('Are you sure you want to delete this place?')) return;
+
+    fetch(`/delete_place/${placeId}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.message) {
+                const card = buttonElement.closest('.place-card');
+                card.style.transition = 'opacity 0.3s ease';
+                card.style.opacity = '0';
+
+                setTimeout(() => {
+                    card.remove();
+                    const cartCountElem = document.getElementById('cart-count');
+                    if (cartCountElem) {
+                        const newCount = document.querySelectorAll('.place-card').length;
+                        cartCountElem.textContent = newCount;
+                    }
+                    const remainingCards = document.querySelectorAll('.place-card').length;
+                    if (remainingCards === 0) {
+                        const placesGrid = document.getElementById("places-grid");
+                        if (placesGrid) {
+                            placesGrid.innerHTML = "<p class='text-muted text-center mt-3'>No saved places yet.</p>";
+                        }
+                    }
+                }, 300);
+            } else {
+                alert(data.error || "Error deleting place");
+            }
+        })
+        .catch(() => alert("Error deleting place"));
+}
+
+
 </script>
 <script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap"></script>
 {% endblock %}

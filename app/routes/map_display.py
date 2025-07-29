@@ -186,6 +186,12 @@ def cart():
     user_id = session['user_id']
     all_places = get_user_places(user_id=user_id)
 
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return render_template("cart_partial.html", user_places=all_places, total_places=len(all_places))
+
+    return render_template("cart.html", user_places=all_places, total_places=len(all_places))
+
+
     return render_template("cart.html",
                          user_places=all_places,
                          total_places=len(all_places))
