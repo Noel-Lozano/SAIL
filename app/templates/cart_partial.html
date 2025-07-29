@@ -1,34 +1,42 @@
-<div class="cart-panel">
+<div class="cart-panel d-flex flex-column" style="position: relative;
+                                                  width: 400px; 
+                                                  height: 100vh;
+                                                  background: #f9f9f9;
+                                                  box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+                                                  z-index: 999;
+                                                  display: flex;
+                                                  flex-direction: column">
     <div class="cart-header">
-        <div class="d-flex justify-content-between align-items-center mb-2"
-             style="background-color: transparent; margin-top: 2rem;">
-            <h4 class="mb-0" style="margin-left: 1rem;">Saved Locations:</h4>
-            <button id="close-cart" class="btn btn-sm">✖️</button>
+        <div class="d-flex justify-content-between align-items-center mb-2" style="margin-top: 2rem;">
+            <h4 class="mb-0 ms-3">Saved Locations:</h4>
+            <button id="close-cart" class="btn btn-sm me-3">✖️</button>
         </div>
     </div>
+
     {% if user_places %}
-        <div id="places-grid" class="places-grid">
+        <div id="places-grid" class="places-grid flex-grow-1 overflow-auto px-3" style="margin-bottom: 70px; margin-top:1rem;">
             {% for place in user_places %}
-                <div class="place-card" data-place-id="{{ place.id }}">
-                    <div class="place-name">{{ place.name }}</div>
-                    <div class="place-address">{{ place.address }}</div>
+                <div class="place-card mb-3" data-place-id="{{ place.id }}" style="border: 1px solid rgba(0, 0, 0, 0.436); border-radius: 8px; padding: 10px;">
+                    <div class="place-name fw-bold">{{ place.name }}</div>
+                    <div class="place-address text-muted">{{ place.address }}</div>
                     {% if place.editorial_summary and place.editorial_summary != "No summary provided" %}
-                        <div class="place-summary">{{ place.editorial_summary }}</div>
+                        <div class="place-summary text-secondary mt-2">{{ place.editorial_summary }}</div>
                     {% endif %}
-                    <div class="place-meta-extended">
-                        <div class="coordinates">{{ "%.4f"|format(place.latitude) }}, {{ "%.4f"|format(place.longitude) }}</div>
+                    <div class="place-meta-extended d-flex justify-content-between">
+                        <div class="coordinates text-secondary fst-italic mt-2 small">{{ "%.4f"|format(place.latitude) }}, {{ "%.4f"|format(place.longitude) }}</div>
                         <div class="place-actions">
-                            <a href="https://www.google.com/maps/search/?api=1&query={{ place.latitude }},{{ place.longitude }}" 
-                               target="_blank" 
-                               class="maps-link"
-                               title="Open in Google Maps"
-                               style="background-color: transparent;">🗺️</a>
-                            <button onclick="deletePlace({{ place.id }}, this)" style="border: 0em; background-color: transparent;">🗑️</button>
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ place.latitude }},{{ place.longitude }}"
+                               target="_blank"
+                               title="Open in Google Maps">🗺️</a>
+                            <button onclick="deletePlace({{ place.id }}, this)" style="border: none; background: transparent;">🗑️</button>
                         </div>
                     </div>
                 </div>
             {% endfor %}
         </div>
-    {% else %}
+
+        <div class="cart-footer p-3 border-top bg-white text-center" style="position: absolute; bottom: 0; left: 0; right: 0;">
+            <a href="/itinerary" class="btn btn-success w-100">Build My Itinerary</a>
+        </div>
     {% endif %}
 </div>
