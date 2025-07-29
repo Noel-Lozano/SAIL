@@ -181,13 +181,13 @@
 
           const upBtn = document.createElement('button');
           upBtn.type = 'button';
-          upBtn.className = 'btn btn-sm btn-outline-secondary';
+          upBtn.className = 'btn btn-sm btn-primary';
           upBtn.innerHTML = '▲';
           upBtn.onclick = () => movePlaceBetweenDays(dayIndex, place.id, -1); // move to previous day
 
           const downBtn = document.createElement('button');
           downBtn.type = 'button';
-          downBtn.className = 'btn btn-sm btn-outline-secondary';
+          downBtn.className = 'btn btn-sm btn-primary';
           downBtn.innerHTML = '▼';
           downBtn.onclick = () => movePlaceBetweenDays(dayIndex, place.id, 1); // move to next day
 
