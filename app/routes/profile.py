@@ -22,15 +22,10 @@ def profile():
         flash("Profile updated successfully!", "success")
         return redirect(url_for('profile.profile'))
     
-    user_stats = {
-        "saved_places": Place.query.filter_by(user_id=user.id).count(),
-        "cities_visited": len({s.city for s in Search.query.filter_by(user_id=user.id)}),
-        "trip_plans": Search.query.filter_by(user_id=user.id).count()
-    }
 
     user_profile = {
         "interests": user.interests or "No interests specified",
         "ai_enabled": user.ai_enabled
     }
 
-    return render_template('profile.html', user=user, user_stats=user_stats, user_profile=user_profile)
+    return render_template('profile.html', user=user, user_profile=user_profile)
