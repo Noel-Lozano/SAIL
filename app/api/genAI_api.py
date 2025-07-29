@@ -206,12 +206,6 @@ For each place, provide:
 - Short description (1-2 sentences)
 - Why it matches the interests (1 sentence)
 - Accurate latitude and longitude coordinates (decimal format)
-- Open hours: an array of objects like this:
-      [
-        {{"open": {{"day": 1, "hour": 9, "minute": 0}}}},
-        {{"open": {{"day": 1, "hour": 17, "minute": 0}}}}
-      ]
-      Days are 0=Sunday through 6=Saturday. Use empty list [] if unknown.
 
 IMPORTANT: Return ONLY a valid JSON array. No other text before or after the JSON.
 
@@ -223,10 +217,6 @@ Format:
         "reason": "How this place matches the user's interests",
         "latitude": 40.7589,
         "longitude": -73.9851
-        "open_hours": [
-            {{"open": {{"day": 1, "hour": 9, "minute": 0}}}},
-            {{"open": {{"day": 1, "hour": 17, "minute": 0}}}}
-        ]
     }}
 ]
 

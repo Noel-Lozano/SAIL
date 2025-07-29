@@ -100,45 +100,9 @@ function addAIPlaceMarkers(recommendations) {
             }
         });
 
-
         const infoWindow = new google.maps.InfoWindow({
             content: `<div><strong>${rec.name}</strong><br><em>${rec.description}</em><br><small>${rec.why}</small></div>`
         });
-      
-            fetch('/save_place', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(place)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.message) {
-                    buttonElement.classList.add('saved');
-                    buttonElement.innerHTML = '✓';
-                    setTimeout(() => {
-                        buttonElement.innerHTML = '★';
-                    }, 2000);
-                    const original = buttonElement.innerHTML;
-                    
-                    const cartCountElem = document.getElementById('cart-count');
-                    if (cartCountElem) {
-                        const currentCount = parseInt(cartCountElem.textContent) || 0;
-                        cartCountElem.textContent = currentCount + 1;
-                    }
-                } else {
-                    alert(data.error || 'Error saving place');
-                }
-            })
-            .catch(err => {
-                console.error('Error saving place:', err);
-                alert('Error saving place');
-            })
-            .finally(() => {
-                buttonElement.disabled = false;
-                buttonElement.style.opacity = '1';
-            });
-        }
-
 
         marker.addListener("click", () => {
             Object.values(infoWindows).forEach(iw => iw.close());
@@ -163,29 +127,43 @@ function displayAIRecommendations() {
         recElement.style.borderLeft = '4px solid #007bff';
         recElement.style.backgroundColor = '#f8f9ff';
 
+        // Create place data object for AI recommendations
+        const placeData = {
+            id: null, // AI recommendations don't have Google place_id initially
+            place_id: null,
+            name: rec.name || '',
+            address: `${rec.name || 'Unknown'}, {{ city }}`, // Fallback address
+            city: "{{ city }}",
+            latitude: rec.latitude || 0,
+            longitude: rec.longitude || 0,
+            editorial_summary: (rec.description || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;'),
+            open_hours: [] // Will be populated when matched with Google Places
+        };
+
+        // Escape data for safe HTML insertion
+        const escapedName = (rec.name || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        const escapedDescription = (rec.description || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        const escapedReason = ((rec.reason || rec.why) || 'Matches your interests').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+
         recElement.innerHTML = `
             <div class="place-info">
                 <div class="place-name fw-bold" style="cursor:pointer;" onclick="focusOnMarker('ai-${index}')">
-                    <i class="fas fa-magic me-2 text-primary"></i>${rec.name}
+                    <i class="fas fa-magic me-2 text-primary"></i>${escapedName}
                 </div>
                 <div class="place-address text-muted">{{ city }}</div>
-                <div class="place-summary text-secondary fst-italic mt-2 small">${rec.description}</div>
+                <div class="place-summary text-secondary fst-italic mt-2 small">${escapedDescription}</div>
+                <div class="place-reason text-info mt-1 small"><strong>Why:</strong> ${escapedReason}</div>
             </div>
             <div class="place-actions d-flex gap-2 align-items-center mt-2">
                 <button class="save-btn btn btn-sm btn-outline-primary" 
-                        data-place='${JSON.stringify({
-                            id: null,
-                            name: rec.name,
-                            address: rec.name + ', {{ city }}',
-                            city: "{{ city }}",
-                            latitude: rec.latitude,
-                            longitude: rec.longitude,
-                            editorial_summary: rec.description
-                        })}'
-                        onclick="savePlace(this)" 
+                        onclick="saveAIPlace(${index})" 
                         title="Save AI recommendation">★</button>
             </div>
         `;
+
+        // Store the place data directly on the element to avoid JSON parsing issues
+        const saveButton = recElement.querySelector('.save-btn');
+        saveButton.placeData = placeData;
 
         container.appendChild(recElement);
     });
@@ -193,28 +171,145 @@ function displayAIRecommendations() {
     addAIPlaceMarkers(recommendations);
 }
 
-function savePlace(buttonElement) {
-    const place = JSON.parse(buttonElement.dataset.place);
-    buttonElement.disabled = true;
-    buttonElement.style.opacity = '0.5';
+function saveAIPlace(index) {
+    const container = document.getElementById('ai-recommendations-list');
+    const placeElement = container.children[index];
+    const saveButton = placeElement.querySelector('.save-btn');
+    
+    if (!saveButton || !saveButton.placeData) {
+        console.error('[DEBUG] No place data found for AI recommendation');
+        alert('Error: No place data found');
+        return;
+    }
+    
+    const place = saveButton.placeData;
+    
+    // Show loading state
+    const originalText = saveButton.innerHTML;
+    saveButton.disabled = true;
+    saveButton.innerHTML = '⏳';
+    saveButton.style.opacity = '0.7';
+    
+    console.log('[DEBUG] Saving AI place:', place);
+    
     fetch('/save_place', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(place)
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(data => {
+                throw new Error(data.error || `HTTP ${res.status}`);
+            });
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.message) {
-            buttonElement.classList.add('saved');
-            buttonElement.title = 'Place saved!';
+            saveButton.classList.add('saved');
+            saveButton.innerHTML = '✓';
+            saveButton.style.backgroundColor = '#28a745';
+            saveButton.style.color = 'white';
+            saveButton.style.borderColor = '#28a745';
+            
+            // Reset after 2 seconds
+            setTimeout(() => {
+                saveButton.innerHTML = '★';
+                saveButton.style.backgroundColor = '';
+                saveButton.style.color = '';
+                saveButton.style.borderColor = '';
+            }, 2000);
+            
+            // Update cart count
             const cartCountElem = document.getElementById('cart-count');
             if (cartCountElem) {
                 const currentCount = parseInt(cartCountElem.textContent) || 0;
                 cartCountElem.textContent = currentCount + 1;
             }
+            
+            console.log('[DEBUG] AI place saved successfully:', data);
         } else {
-            alert(data.error || 'Error saving place');
+            throw new Error(data.error || 'Unknown error');
         }
+    })
+    .catch(error => {
+        console.error('[DEBUG] Error saving AI place:', error);
+        alert(`Error saving place: ${error.message}`);
+        
+        // Reset button state on error
+        saveButton.innerHTML = originalText;
+        saveButton.style.backgroundColor = '';
+        saveButton.style.color = '';
+        saveButton.style.borderColor = '';
+    })
+    .finally(() => {
+        saveButton.disabled = false;
+        saveButton.style.opacity = '1';
+    });
+}
+
+function savePlace(buttonElement) {
+    const place = JSON.parse(buttonElement.dataset.place);
+    
+    // Show loading state
+    const originalText = buttonElement.innerHTML;
+    buttonElement.disabled = true;
+    buttonElement.innerHTML = '⏳';
+    buttonElement.style.opacity = '0.7';
+    
+    console.log('[DEBUG] Saving place:', place);
+    
+    fetch('/save_place', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(place)
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(data => {
+                throw new Error(data.error || `HTTP ${res.status}`);
+            });
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.message) {
+            buttonElement.classList.add('saved');
+            buttonElement.innerHTML = '✓';
+            buttonElement.style.backgroundColor = '#28a745';
+            buttonElement.style.color = 'white';
+            buttonElement.style.borderColor = '#28a745';
+            
+            // Reset after 2 seconds
+            setTimeout(() => {
+                buttonElement.innerHTML = '★';
+                buttonElement.style.backgroundColor = '';
+                buttonElement.style.color = '';
+                buttonElement.style.borderColor = '';
+            }, 2000);
+            
+            // Update cart count
+            const cartCountElem = document.getElementById('cart-count');
+            if (cartCountElem) {
+                const currentCount = parseInt(cartCountElem.textContent) || 0;
+                cartCountElem.textContent = currentCount + 1;
+            }
+            
+            console.log('[DEBUG] Place saved successfully:', data);
+        } else {
+            throw new Error(data.error || 'Unknown error');
+        }
+    })
+    .catch(error => {
+        console.error('[DEBUG] Error saving place:', error);
+        alert(`Error saving place: ${error.message}`);
+        
+        // Reset button state on error
+        buttonElement.innerHTML = originalText;
+        buttonElement.style.backgroundColor = '';
+        buttonElement.style.color = '';
+        buttonElement.style.borderColor = '';
     })
     .finally(() => {
         buttonElement.disabled = false;
