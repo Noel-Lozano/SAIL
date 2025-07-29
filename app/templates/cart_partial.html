@@ -1,0 +1,34 @@
+<div class="cart-panel">
+    <div class="cart-header">
+        <div class="d-flex justify-content-between align-items-center mb-2"
+             style="background-color: transparent; margin-top: 2rem;">
+            <h4 class="mb-0" style="margin-left: 1rem;">Saved Locations:</h4>
+            <button id="close-cart" class="btn btn-sm">✖️</button>
+        </div>
+    </div>
+    {% if user_places %}
+        <div id="places-grid" class="places-grid">
+            {% for place in user_places %}
+                <div class="place-card" data-place-id="{{ place.id }}">
+                    <div class="place-name">{{ place.name }}</div>
+                    <div class="place-address">{{ place.address }}</div>
+                    {% if place.editorial_summary and place.editorial_summary != "No summary provided" %}
+                        <div class="place-summary">{{ place.editorial_summary }}</div>
+                    {% endif %}
+                    <div class="place-meta-extended">
+                        <div class="coordinates">{{ "%.4f"|format(place.latitude) }}, {{ "%.4f"|format(place.longitude) }}</div>
+                        <div class="place-actions">
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ place.latitude }},{{ place.longitude }}" 
+                               target="_blank" 
+                               class="maps-link"
+                               title="Open in Google Maps"
+                               style="background-color: transparent;">🗺️</a>
+                            <button onclick="deletePlace({{ place.id }}, this)" style="border: 0em; background-color: transparent;">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+    {% endif %}
+</div>
