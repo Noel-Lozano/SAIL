@@ -56,7 +56,7 @@ cache = {}
 def get_places_from_city(city, place, page_n = 1):
     if disabled:
         print("DEBUG: Disabled mode is ON, returning dummy data.")
-        with open("app/api/new_york.txt", "r") as file:
+        with open("app/api/new_york.txt", "r", encoding="utf-8") as file:
             data = ast.literal_eval(file.read())
             return [process_result(place) for place in data.get("places", [])]
 
