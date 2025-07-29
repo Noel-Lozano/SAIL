@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container-fluid px-4 pt-3" style="margin-bottom: 2rem;">
   <div class="d-flex align-items-center gap-3 mb-3">
-    <a href="/planning" class="text-decoration-none fs-4">⬅</a>
+    <a href="/planning" class="text-decoration-none fs-4">◄</a>
     <h2 class="fw-bold mb-0">Build Your Itinerary</h2>
   </div>
 
@@ -101,8 +101,34 @@
       section.className = 'day-section mb-4';
 
       const heading = document.createElement('h5');
+      heading.className = 'd-flex align-items-center gap-2';
       heading.textContent = day.date;
+
+      // Add weather info if available
+      if (day.weather) {
+          const weather = day.weather;
+
+          const weatherContainer = document.createElement('div');
+          weatherContainer.className = 'd-flex align-items-center gap-1 ms-2';
+
+          const weatherIcon = document.createElement('img');
+          weatherIcon.src = weather.icon;
+          weatherIcon.alt = weather.description;
+          weatherIcon.style.width = '20px';
+          weatherIcon.style.height = '20px';
+
+          const tempSpan = document.createElement('span');
+          tempSpan.textContent = `${Math.round(weather.avg_temp * 9/5 + 32)}°F`;
+          tempSpan.style.fontSize = '0.9rem';
+          tempSpan.className = 'text-muted';
+
+          weatherContainer.appendChild(weatherIcon);
+          weatherContainer.appendChild(tempSpan);
+          heading.appendChild(weatherContainer);
+      }
+
       section.appendChild(heading);
+
 
       if (day.places && day.places.length) {
         day.places.sort((a, b) => parseTime(a.time) - parseTime(b.time));
@@ -203,7 +229,7 @@
     } else if (openToday.length) {
       hoursText = openToday.map(({ open, close }) => {
         const fmt = t => `${String(t.hour).padStart(2, '0') % 12}:${String(t.minute).padStart(2, '0')} ${t.hour < 12 ? 'AM' : 'PM'}`;
-        return `Open from ${fmt(open)} to ${fmt(close)} on ${weekdayName}`;
+        return `Open from ${fmt(open)} to ${fmt(close)} on ${weekdayName}.`;
       }).join('<br>');
     } else {
       hoursText = 'Closed today.';

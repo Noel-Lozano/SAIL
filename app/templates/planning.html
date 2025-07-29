@@ -78,7 +78,10 @@ function savePlace(buttonElement) {
             .then(data => {
                 if (data.message) {
                     buttonElement.classList.add('saved');
-                    buttonElement.title = 'Place saved!';
+                    buttonElement.innerHTML = '✓';
+                    setTimeout(() => {
+                        buttonElement.innerHTML = '★';
+                    }, 2000);
                     const original = buttonElement.innerHTML;
                     
                     const cartCountElem = document.getElementById('cart-count');

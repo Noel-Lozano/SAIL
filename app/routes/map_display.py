@@ -155,6 +155,8 @@ def itinerary():
                         "date": date.strftime("%A, %B %d").replace(" 0", " "),
                         "places": [dict_places[place_id - 1] for place_id in day]
                     })
+                    if i < len(weather_data):
+                        itinerary[-1]['weather'] = weather_data[i]
 
                 if unused_places:
                     unused_places_list = [dict_places[place_id - 1] for place_id in unused_places]
@@ -165,7 +167,7 @@ def itinerary():
             else:
                 itinerary = [{"date": "Unassigned", "places": dict_places}]
 
-        for day in itinerary:
+        for i, day in enumerate(itinerary):
             day['color'] = get_random_bold_color()
             for place in day['places']:
                 place['color'] = day['color']
