@@ -168,35 +168,13 @@ Now evaluate the following days:
 
     return groupings, weather_prefs
 
-def extract_json_from_text(text):
-    """Extract JSON from text that might contain other content."""
-    # Try to find JSON array in the text
-    json_pattern = r'\[[\s\S]*?\]'
-    matches = re.findall(json_pattern, text)
-    
-    for match in matches:
-        try:
-            return json.loads(match)
-        except json.JSONDecodeError:
-            continue
-    
-    # If no valid JSON array found, try to find JSON objects
-    json_obj_pattern = r'\{[\s\S]*?\}'
-    matches = re.findall(json_obj_pattern, text)
-    
-    valid_objects = []
-    for match in matches:
-        try:
-            obj = json.loads(match)
-            if isinstance(obj, dict) and 'name' in obj:
-                valid_objects.append(obj)
-        except json.JSONDecodeError:
-            continue
-    
-    return valid_objects if valid_objects else []
+cache = {}
 
 def recommend_places_with_interests(city, interests):
     """Generates a list of recommended places based on user interests."""
+    if f"{city}_{interests}" in cache:
+        print("DEBUG: Cache hit for interests:", f"{city}_{interests}")
+        return cache[f"{city}_{interests}"]
     prompt = f"""
 You are a smart travel planner. Recommend exactly 3-5 places in {city} based on the user's interests:
 {interests or "No specific interests provided."}
@@ -240,6 +218,8 @@ Ensure coordinates are accurate for {city} and the places actually exist.
         for rec in recommendations:
             if "open_hours" not in rec or not isinstance(rec["open_hours"], list):
                 rec["open_hours"] = []
+        
+        cache[f"{city}_{interests}"] = recommendations
         return recommendations
     except json.JSONDecodeError as e:
         print(f"[ERROR] Failed to parse JSON: {e}")

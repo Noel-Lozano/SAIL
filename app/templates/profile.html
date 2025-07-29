@@ -1,314 +1,64 @@
 {% extends "layout.html" %}
-
 {% block title %}Profile - TravelBot{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-<style>
-    .profile-container {
-        max-width: 800px;
-        margin: 0 auto;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-
-    .profile-header {
-        background: #0C318C;
-        color: white;
-        padding: 40px 30px;
-        text-align: center;
-    }
-
-    .profile-title {
-        font-size: 32px;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-
-    .profile-subtitle {
-        font-size: 16px;
-        opacity: 0.9;
-    }
-
-    .profile-content {
-        padding: 40px 30px;
-    }
-
-    .profile-section {
-        margin-bottom: 40px;
-        padding-bottom: 30px;
-        border-bottom: 1px solid #eee;
-    }
-
-    .profile-section:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-    }
-
-    .section-title {
-        font-size: 20px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 20px;
-    }
-
-    .form-group {
-        margin-bottom: 25px;
-    }
-
-    .form-label {
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 8px;
-        display: block;
-    }
-
-    .form-control {
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 12px 16px;
-        transition: border-color 0.3s ease;
-        font-size: 16px;
-        width: 100%;
-    }
-
-    .form-control:focus {
-        border-color: #0C318C;
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(12, 49, 140, 0.1);
-    }
-
-    .interests-textarea {
-        min-height: 120px;
-        resize: vertical;
-    }
-
-    .interests-hint {
-        font-size: 14px;
-        color: #666;
-        margin-top: 8px;
-    }
-
-    .ai-toggle-section {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-        margin-top: 20px;
-    }
-
-    .toggle-container {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 15px;
-    }
-
-    .toggle-label {
-        font-weight: 600;
-        color: #333;
-        margin: 0;
-    }
-
-    .toggle-switch {
-        position: relative;
-        width: 50px;
-        height: 24px;
-        background: #ccc;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: background 0.3s ease;
-    }
-
-    .toggle-switch.active {
-        background: #0C318C;
-    }
-
-    .toggle-switch::after {
-        content: '';
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        background: white;
-        border-radius: 50%;
-        top: 2px;
-        left: 2px;
-        transition: transform 0.3s ease;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-
-    .toggle-switch.active::after {
-        transform: translateX(26px);
-    }
-
-    .toggle-description {
-        font-size: 14px;
-        color: #666;
-        line-height: 1.5;
-    }
-
-    .btn-update {
-        background: #0C318C;
-        border: none;
-        padding: 12px 30px;
-        border-radius: 4px;
-        color: white;
-        font-weight: 600;
-        font-size: 16px;
-        transition: background-color 0.3s ease;
-        cursor: pointer;
-    }
-
-    .btn-update:hover {
-        background: #1e46aa;
-        color: white;
-    }
-
-
-
-    .back-link {
-        color: #0C318C;
-        text-decoration: none;
-        font-weight: 500;
-    }
-
-    .back-link:hover {
-        color: #1e46aa;
-        text-decoration: none;
-    }
-
-    @media (max-width: 768px) {
-        .profile-container {
-            margin: 20px;
-        }
-        
-        .profile-header {
-            padding: 30px 20px;
-        }
-        
-        .profile-content {
-            padding: 30px 20px;
-        }
-        
-        .profile-title {
-            font-size: 24px;
-        }
-        
-        .toggle-container {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-        }
-    }
-</style>
-
-<div class="profile-container">
+<div class="container my-5" style="max-width: 800px;">
+    
     <!-- Back Link -->
-    <div style="padding: 20px 30px 0;">
-        <a href="{{ url_for('index') }}" class="back-link">
-            ← Back to Search
+    <div class="mb-3">
+        <a href="{{ url_for('index') }}" class="text-primary text-decoration-none">
+            ◄ Back to Search
         </a>
     </div>
 
-    <!-- Profile Header -->
-    <div class="profile-header">
-        <h1 class="profile-title" id="display-username">{{ session['user'] }}</h1>
-        <p class="profile-subtitle">Travel Enthusiast & Explorer</p>
+    <!-- Header -->
+    <div class="bg-primary text-white text-center p-4 rounded">
+        <h1 id="display-username" class="mb-1">{{ session['user'] }}</h1>
     </div>
 
-    <!-- Profile Content -->
-    <div class="profile-content">
-        <form id="profile-form" method="POST" action="{{ url_for('profile.profile') }}">
-            <!-- Username Section -->
-            <div class="profile-section">
-                <h2 class="section-title">Account Information</h2>
-                
-                <div class="form-group">
-                    <label class="form-label" for="username">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" value="{{ session['user'] }}" required>
-                </div>
-            </div>
+    <!-- Form -->
+    <form id="profile-form" method="POST" action="{{ url_for('profile.profile') }}" class="bg-white p-4 shadow-sm rounded mt-4">
+        
+        <!-- Account Info -->
+        <div class="mb-4">
+            <label for="username" class="form-label fw-semibold">Username</label>
+            <input type="text" class="form-control" id="username" name="username" value="{{ session['user'] }}" style="width:100%;" required>
+        </div>
 
-            <!-- Interests Section -->
-            <div class="profile-section">
-                <h2 class="section-title">Travel Interests & Preferences</h2>
-                
-                <div class="form-group">
-                    <label class="form-label" for="interests">Your Travel Interests</label>
-                    <textarea class="form-control interests-textarea" id="interests" name="interests" placeholder="Tell us about your travel preferences, favorite activities, cuisine types, accommodation styles, budget range, and anything else that would help us personalize your travel recommendations...">{{ user_profile.interests or '' }}</textarea>
-                    <div class="interests-hint">
-                        These interests will help our AI generate more personalized travel recommendations for you. Include details about activities you enjoy, types of destinations you prefer, budget considerations, accommodation preferences, and any special interests.
-                    </div>
-                </div>
+        <!-- Travel Interests -->
+        <div class="mb-4">
+            <label for="interests" class="form-label fw-semibold">Travel Interests</label>
+            <textarea class="form-control" id="interests" name="interests" rows="4" placeholder="Tell us about your travel preferences..." style="width: 100%;">{{ user_profile.interests or '' }}</textarea>
+        </div>
 
-                <!-- AI Integration Toggle -->
-                <div class="ai-toggle-section">
-                    <div class="toggle-container">
-                        <label class="toggle-label">Use interests for AI recommendations</label>
-                        <div class="toggle-switch {{ 'active' if user_profile.ai_enabled else '' }}" id="ai-toggle"></div>
-                        <input type="hidden" name="ai_enabled" id="ai-enabled-input" value="{{ 'true' if user_profile.ai_enabled else 'false' }}">
-                    </div>
-                    <p class="toggle-description">
-                        When enabled, your interests will be included in AI-generated travel suggestions to provide more personalized recommendations tailored to your preferences.
-                    </p>
-                </div>
+        <!-- AI Toggle -->
+        <div class="form-check form-switch mb-4">
+            <input class="form-check-input" type="checkbox" id="ai-toggle" {{ 'checked' if user_profile.ai_enabled else '' }}>
+            <label class="form-check-label fw-semibold" for="ai-toggle">Use interests for AI recommendations</label>
+            <input type="hidden" name="ai_enabled" id="ai-enabled-input" value="{{ 'true' if user_profile.ai_enabled else 'false' }}">
+            <div class="form-text">
+                When enabled, your interests will be used for more personalized AI-generated suggestions.
             </div>
+        </div>
 
-            <!-- Save Button -->
-            <div class="text-center">
-                <button type="submit" class="btn btn-update">
-                    Update Profile
-                </button>
-            </div>
-        </form>
-    </div>
+        <!-- Save -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary px-4">Update Profile</button>
+        </div>
+    </form>
 </div>
 
 <script>
-    // Toggle switch functionality
+    // AI toggle sync
     const toggle = document.getElementById('ai-toggle');
     const aiEnabledInput = document.getElementById('ai-enabled-input');
-    let aiEnabled = {{ 'true' if user_profile.ai_enabled else 'false' }};
-
-    toggle.addEventListener('click', function() {
-        aiEnabled = !aiEnabled;
-        if (aiEnabled) {
-            toggle.classList.add('active');
-            aiEnabledInput.value = 'true';
-        } else {
-            toggle.classList.remove('active');
-            aiEnabledInput.value = 'false';
-        }
+    toggle.addEventListener('change', () => {
+        aiEnabledInput.value = toggle.checked ? 'true' : 'false';
     });
 
-    // Form submission
-    document.getElementById('profile-form').addEventListener('submit', function(e) {
-        // Let the form submit normally to Flask backend
-        const username = document.getElementById('username').value;
-        
-        // Update display username immediately for better UX
-        document.getElementById('display-username').textContent = username;
+    // Update displayed username instantly
+    document.getElementById('profile-form').addEventListener('submit', () => {
+        document.getElementById('display-username').textContent = document.getElementById('username').value;
     });
-
-    // Character counter for interests textarea
-    const interestsTextarea = document.getElementById('interests');
-    const hint = document.querySelector('.interests-hint');
-
-    function updateCharacterCount() {
-        const count = interestsTextarea.value.length;
-        const words = interestsTextarea.value.trim().split(/\s+/).filter(word => word.length > 0).length;
-        
-        if (count > 0) {
-            hint.innerHTML = `${count} characters, ${words} words. These interests will help our AI generate more personalized travel recommendations for you.`;
-        } else {
-            hint.innerHTML = 'These interests will help our AI generate more personalized travel recommendations for you. Include details about activities you enjoy, types of destinations you prefer, budget considerations, accommodation preferences, and any special interests.';
-        }
-    }
-
-    interestsTextarea.addEventListener('input', updateCharacterCount);
-    updateCharacterCount(); // Initial count
 </script>
-
 {% endblock %}

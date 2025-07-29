@@ -37,9 +37,10 @@ def planning():
     user = User.query.get(user_id)
 
     city = request.args.get('city', 'New York')
-    place = request.args.get('place', '')
+    session['last_search'] = city
     page_n = request.args.get('page', 1, type=int)
-    places = get_places_from_city(city, place, page_n) or []
+    print("calling get_places_from_city with city:", city, "and page_n:", page_n)
+    places = get_places_from_city(city, '', page_n) or []
 
     user_interests = user.interests if user and user.ai_enabled else None
     ai_recommendations = None
@@ -200,6 +201,7 @@ def itinerary():
                          end_date=end_date,
                          saved_itineraries=saved_itineraries,
                          itinerary_name=itinerary_name,
+                         last_search=session.get('last_search', 'New York'),
                          google_maps_api_key=FRONTEND_MAP_API)
 
 @map_display_bp.route("/cart")
@@ -214,11 +216,6 @@ def cart():
         return render_template("cart_partial.html", user_places=all_places, total_places=len(all_places))
 
     return render_template("cart.html", user_places=all_places, total_places=len(all_places))
-
-
-    return render_template("cart.html",
-                         user_places=all_places,
-                         total_places=len(all_places))
 
 @map_display_bp.route("/save_itinerary", methods=['POST'])
 def save_itinerary():
