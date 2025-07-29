@@ -100,9 +100,45 @@ function addAIPlaceMarkers(recommendations) {
             }
         });
 
+
         const infoWindow = new google.maps.InfoWindow({
             content: `<div><strong>${rec.name}</strong><br><em>${rec.description}</em><br><small>${rec.why}</small></div>`
         });
+      
+            fetch('/save_place', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(place)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.message) {
+                    buttonElement.classList.add('saved');
+                    buttonElement.innerHTML = '✓';
+                    setTimeout(() => {
+                        buttonElement.innerHTML = '★';
+                    }, 2000);
+                    const original = buttonElement.innerHTML;
+                    
+                    const cartCountElem = document.getElementById('cart-count');
+                    if (cartCountElem) {
+                        const currentCount = parseInt(cartCountElem.textContent) || 0;
+                        cartCountElem.textContent = currentCount + 1;
+                    }
+                } else {
+                    alert(data.error || 'Error saving place');
+                }
+            })
+            .catch(err => {
+                console.error('Error saving place:', err);
+                alert('Error saving place');
+            })
+            .finally(() => {
+                buttonElement.disabled = false;
+                buttonElement.style.opacity = '1';
+            });
+        }
+
 
         marker.addListener("click", () => {
             Object.values(infoWindows).forEach(iw => iw.close());
