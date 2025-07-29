@@ -1,6 +1,8 @@
 import os
 import google.generativeai as genai
 from datetime import datetime
+import json
+import re
 
 GEMINI_KEY = os.environ.get("GEMINI_KEY")
 if not GEMINI_KEY:
@@ -165,3 +167,90 @@ Now evaluate the following days:
     weather_prefs = weather_prefs[:num_days]
 
     return groupings, weather_prefs
+
+def extract_json_from_text(text):
+    """Extract JSON from text that might contain other content."""
+    # Try to find JSON array in the text
+    json_pattern = r'\[[\s\S]*?\]'
+    matches = re.findall(json_pattern, text)
+    
+    for match in matches:
+        try:
+            return json.loads(match)
+        except json.JSONDecodeError:
+            continue
+    
+    # If no valid JSON array found, try to find JSON objects
+    json_obj_pattern = r'\{[\s\S]*?\}'
+    matches = re.findall(json_obj_pattern, text)
+    
+    valid_objects = []
+    for match in matches:
+        try:
+            obj = json.loads(match)
+            if isinstance(obj, dict) and 'name' in obj:
+                valid_objects.append(obj)
+        except json.JSONDecodeError:
+            continue
+    
+    return valid_objects if valid_objects else []
+
+def recommend_places_with_interests(city, interests):
+    """Generates a list of recommended places based on user interests."""
+    prompt = f"""
+You are a smart travel planner. Recommend exactly 3-5 places in {city} based on the user's interests:
+{interests or "No specific interests provided."}
+
+For each place, provide:
+- Name (real place name)
+- Short description (1-2 sentences)
+- Why it matches the interests (1 sentence)
+- Accurate latitude and longitude coordinates (decimal format)
+- Open hours: an array of objects like this:
+      [
+        {{"open": {{"day": 1, "hour": 9, "minute": 0}}}},
+        {{"open": {{"day": 1, "hour": 17, "minute": 0}}}}
+      ]
+      Days are 0=Sunday through 6=Saturday. Use empty list [] if unknown.
+
+IMPORTANT: Return ONLY a valid JSON array. No other text before or after the JSON.
+
+Format:
+[
+    {{
+        "name": "Actual Place Name",
+        "description": "Brief description of what this place offers",
+        "reason": "How this place matches the user's interests",
+        "latitude": 40.7589,
+        "longitude": -73.9851
+        "open_hours": [
+            {{"open": {{"day": 1, "hour": 9, "minute": 0}}}},
+            {{"open": {{"day": 1, "hour": 17, "minute": 0}}}}
+        ]
+    }}
+]
+
+Ensure coordinates are accurate for {city} and the places actually exist.
+"""
+    
+    model = genai.GenerativeModel('gemini-2.0-flash-lite')
+    response = model.generate_content(prompt)
+    
+    raw_text = response.text.strip()
+    match = re.search(r'\[.*\]', raw_text, re.DOTALL)
+    if not match:
+        print("[ERROR] Gemini did not return JSON.")
+        return []
+    json_text = match.group(0)
+
+    # Try parsing the JSON
+    try:
+        recommendations = json.loads(json_text)
+        # Ensure open_hours is always a list
+        for rec in recommendations:
+            if "open_hours" not in rec or not isinstance(rec["open_hours"], list):
+                rec["open_hours"] = []
+        return recommendations
+    except json.JSONDecodeError as e:
+        print(f"[ERROR] Failed to parse JSON: {e}")
+        return []

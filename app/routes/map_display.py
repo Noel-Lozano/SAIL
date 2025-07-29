@@ -2,10 +2,10 @@ import os
 from flask import render_template, request, Blueprint, jsonify, session
 from numpy import place
 from app.api.map_api import get_places_from_city, get_popularity
-from app.api.genAI_api import generate_groupings
+from app.api.genAI_api import generate_groupings, recommend_places_with_interests
 from app.api.weather_api import get_weather
 from app.models.db_utils import save_place, get_user_places, delete_place, save_user_itinerary
-from app.models.models import Place, Itinerary
+from app.models.models import Place, Itinerary, User
 from datetime import datetime, timedelta
 from itertools import permutations
 import json
@@ -34,11 +34,17 @@ def planning():
 
     user_id = session['user_id']
     user_places = get_user_places(user_id=user_id)
+    user = User.query.get(user_id)
 
     city = request.args.get('city', 'New York')
     place = request.args.get('place', '')
     page_n = request.args.get('page', 1, type=int)
     places = get_places_from_city(city, place, page_n) or []
+
+    user_interests = user.interests if user and user.ai_enabled else None
+    ai_recommendations = None
+    if user and user.ai_enabled and user_interests:
+        ai_recommendations = recommend_places_with_interests(city, user_interests)
 
     return render_template("planning.html", 
                            places=places, 
@@ -46,10 +52,11 @@ def planning():
                            city=city, 
                            place=place, 
                            user_places=user_places,
-                           total_places=len(user_places))
+                           total_places=len(user_places),
+                           user_interests=user_interests,
+                           ai_recommendations=ai_recommendations)
 
 def optimize_groupings(all_places, groupings, weather_prefs, weather_data, start_date):
-    # pair each grouping with its weather preference
     tot_count = sum(len(day) for day in groupings)
     groupings = [(grouping, weather_prefs[i]) for i, grouping in enumerate(groupings)]
 
@@ -58,15 +65,11 @@ def optimize_groupings(all_places, groupings, weather_prefs, weather_data, start
 
     for permutation in permutations(groupings):
         open_percentage = 0
-
         max_avg_popularity = 0
-
         cloudy_percentage = 0
         cloudy_days = 0
-
         temperature_diff = 0
         temperature_days = 0
-
 
         for i, (places, weather_pref) in enumerate(permutation):
             date = start_date + timedelta(days=i)
@@ -76,16 +79,33 @@ def optimize_groupings(all_places, groupings, weather_prefs, weather_data, start
             for place_id in places:
                 place = all_places[place_id - 1]
 
+                # Use a local variable for open_hours
+                open_hours = place.get("open_hours") if isinstance(place, dict) else place.open_hours
+
+                # Ensure it's a list
+                if not isinstance(open_hours, list):
+                    try:
+                        open_hours = json.loads(open_hours) if open_hours else []
+                    except:
+                        open_hours = []
+
+                # Assume always open if still empty
+                if not open_hours:
+                    open_hours = [{"open": {"day": d, "hour": 0, "minute": 0}} for d in range(7)]
+
                 # Check if the place is open on the current day
-                open24hours = place.open_hours == [] or place.open_hours == [{'open': {'day': 0, 'hour': 0, 'minute': 0}}]
-                if open24hours or any(day['open']['day'] == weekday_number for day in place.open_hours):
-                    open_percentage += 100/tot_count
+                open24hours = open_hours == [] or open_hours == [{'open': {'day': 0, 'hour': 0, 'minute': 0}}]
+                if open24hours or any(
+                    isinstance(day, dict) and 'open' in day and day['open'].get('day') == weekday_number
+                    for day in open_hours
+                ):
+                    open_percentage += 100 / tot_count
 
                 # Check popularity data
-                pop_data = next((p for p in place.popularity_data if p['name'] == weekday), None)
+                pop_data = next((p for p in place["popularity_data"] if p['name'] == weekday), None) if isinstance(place, dict) else next((p for p in place.popularity_data if p['name'] == weekday), None)
                 if pop_data:
                     pop_data = [100 if x == 0 else x for x in pop_data['data']][9:]
-                    max_avg_popularity = max(max_avg_popularity, sum(pop_data)/len(pop_data))
+                    max_avg_popularity = max(max_avg_popularity, sum(pop_data) / len(pop_data))
 
             # Check cloudy weather preference
             if weather_pref['sunny_preferred']:
@@ -99,20 +119,17 @@ def optimize_groupings(all_places, groupings, weather_prefs, weather_data, start
                 temperature_days += 1
 
         cloudy_percentage = cloudy_percentage / cloudy_days if cloudy_days > 0 else 0
-        # Scale temperature diff as percent of max possible diff (60 degrees)
         temperature_diff = (temperature_diff / (60 * temperature_days)) * 100 if temperature_days > 0 else 0
 
         open_scale, pop_scale, cloudy_scale, temp_scale = 10, -3, -3, -2
         score = (open_percentage * open_scale) + (max_avg_popularity * pop_scale) + (cloudy_percentage * cloudy_scale) + (temperature_diff * temp_scale)
-        print(f"[DEBUG] Permutation score: {score} (Open: {open_percentage}, Pop: {max_avg_popularity}, Cloudy: {cloudy_percentage}, Temp Diff: {temperature_diff})")
         if score > best_score:
             best_score = score
             best_permutation = permutation
         
     best_permutation = [places for places, _ in best_permutation]
-    print(f"[DEBUG] Best permutation score: {best_score}")
-    print(f"[DEBUG] Best permutation: {best_permutation}")
     return best_permutation
+
 
 @map_display_bp.route("/itinerary")
 def itinerary():
@@ -230,6 +247,16 @@ def save_place_route():
     data = request.get_json()
     user_id = session['user_id']
 
+    # Normalize open_hours into a Python list
+    open_hours = data.get('open_hours', [])
+    if isinstance(open_hours, str):
+        try:
+            open_hours = json.loads(open_hours) if open_hours.strip() else []
+        except Exception:
+            open_hours = []
+    if not isinstance(open_hours, list):
+        open_hours = []
+
     # Check if place already exists for this user
     existing_place = Place.query.filter_by(
         user_id=user_id,
@@ -259,7 +286,7 @@ def save_place_route():
             longitude=data['longitude'],
             editorial_summary=data.get('editorial_summary', ''),
             popularity_data=popularity_data,
-            open_hours=data.get('open_hours', '[]')
+            open_hours=open_hours
         )
         return jsonify({"message": "Place saved successfully", "place_id": saved_place.id}), 201
     except Exception as e:

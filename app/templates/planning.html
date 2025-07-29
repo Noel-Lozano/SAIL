@@ -1,29 +1,44 @@
 {% extends "layout.html" %}
 {% block title %}Planning{% endblock %}
 {% block content %}
-    <h2 class="fw-bold" style="margin-top: 3rem; margin-bottom:1rem;">Results for: {{ city }}</h2>
-    <div id="cart-panel-container" class="cart-container" style="position: fixed; top: 0; right: 0; width: 400px; height: 100vh; background: white; box-shadow: -2px 0 10px rgba(0,0,0,0.2); overflow-y: auto; z-index: 9999; display: none;">
+<h2 class="fw-bold" style="margin-top: 3rem; margin-bottom:1rem;">Results for: {{ city }}</h2>
+<div id="cart-panel-container" class="cart-container" style="position: fixed; top: 0; right: 0; width: 400px; height: 100vh; background: white; box-shadow: -2px 0 10px rgba(0,0,0,0.2); overflow-y: auto; z-index: 9999; display: none;"></div>
+
+<div class="search-form d-flex justify-content-between align-items-center" style="gap: 1rem; flex-wrap: nowrap; margin-bottom: 1rem;">
+    <form action="/planning" method="get" class="d-flex align-items-center" style="gap: 0.5rem; flex-grow: 1; margin: 0;">
+        <input type="text" name="city" placeholder="Where to?" value="{{ city }}" class="form-control" style="min-width: 0; height: 95%;">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+    <div id="cart-icon-container" style="position: relative; flex-shrink: 0;">
+        <a href="/cart" class="cart-icon d-inline-block">
+            <img src="{{ url_for('static', filename='images/cart.png') }}" alt="Cart" style="width: 30px; height: 30px;">
+            <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              {{ total_places }}
+            </span>
+        </a>
     </div>
-
-    <div class="search-form d-flex justify-content-between align-items-center" style="gap: 1rem; flex-wrap: nowrap; margin-bottom: 1rem;">
-        <form action="/planning" method="get" class="d-flex align-items-center" style="gap: 0.5rem; flex-grow: 1; margin: 0;">
-            <input type="text" name="city" placeholder="Where to?" value="{{ city }}" class="form-control" style="min-width: 0; height: 95%;">
-            <button type="submit" class="btn btn-primary">Search</button>
-        </form>
-
-        <div id="cart-icon-container" style="position: relative; flex-shrink: 0;">
-            <a href="/cart" class="cart-icon d-inline-block">
-                <img src="{{ url_for('static', filename='images/cart.png') }}" alt="Cart" style="width: 30px; height: 30px;">
-                <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                  {{ total_places }}
-                </span>
-            </a>
-        </div>
-    </div>
-
+</div>
 
 <div class="d-flex flex-column flex-md-row gap-4" style="height: calc(100vh - 180px); margin-bottom: 2rem;">
   <div class="places-list overflow-auto" style="width: 35%;">
+
+    <!-- AI Recommendations Section -->
+    {% if ai_recommendations %}
+    <div class="ai-recommendations-section mb-4">
+        <h5 class="fw-bold text-primary mb-3">
+            <i class="fas fa-robot me-2"></i>AI Recommendations for You
+        </h5>
+        <div class="alert alert-info py-2 px-3 mb-3" style="font-size: 0.9em;">
+            <i class="fas fa-lightbulb me-1"></i>
+            Based on your interests: <em>{{ user_interests }}</em>
+        </div>
+        <div id="ai-recommendations-list"></div>
+        <hr class="my-4">
+    </div>
+    {% endif %}
+
+    <!-- Regular Places Section -->
+    <h5 class="fw-bold mb-3">Places in {{ city }}</h5>
     {% for place in places %}
     <div class="place-item mb-3 p-2 border rounded" data-place-id="{{ place.place_id }}">
       <div class="place-info">
@@ -64,154 +79,176 @@ let map;
 let markers = {};
 let infoWindows = {};
 
-function savePlace(buttonElement) {
-  const place = JSON.parse(buttonElement.dataset.place);
-  buttonElement.disabled = true;
-  buttonElement.style.opacity = '0.5';
+// --- Add AI markers (blue version of existing SVG) ---
+function addAIPlaceMarkers(recommendations) {
+    recommendations.forEach((rec, index) => {
+        if (!rec.latitude || !rec.longitude) return;
 
-            fetch('/save_place', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(place)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.message) {
-                    buttonElement.classList.add('saved');
-                    buttonElement.title = 'Place saved!';
-                    const original = buttonElement.innerHTML;
-                    
-                    const cartCountElem = document.getElementById('cart-count');
-                    if (cartCountElem) {
-                        const currentCount = parseInt(cartCountElem.textContent) || 0;
-                        cartCountElem.textContent = currentCount + 1;
-                    }
-                } else {
-                    alert(data.error || 'Error saving place');
-                }
-            })
-            .catch(err => {
-                console.error('Error saving place:', err);
-                alert('Error saving place');
-            })
-            .finally(() => {
-                buttonElement.disabled = false;
-                buttonElement.style.opacity = '1';
-            });
-        }
+        const marker = new google.maps.Marker({
+            position: { lat: rec.latitude, lng: rec.longitude },
+            map: map,
+            title: rec.name,
+            icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                    <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 0C6.7 0 0 6.7 0 15c0 11.25 15 25 15 25s15-13.75 15-25C30 6.7 23.3 0 15 0z" fill="#1E90FF"/>
+                        <circle cx="15" cy="15" r="8" fill="white"/>
+                    </svg>
+                `),
+                scaledSize: new google.maps.Size(30, 40),
+                anchor: new google.maps.Point(15, 40)
+            }
+        });
 
-function focusOnMarker(placeId) {
-  const marker = markers[placeId];
-  if (marker) {
-    map.setCenter(marker.getPosition());
-    map.setZoom(16);
+        const infoWindow = new google.maps.InfoWindow({
+            content: `<div><strong>${rec.name}</strong><br><em>${rec.description}</em><br><small>${rec.why}</small></div>`
+        });
 
-    const infoWindow = infoWindows[placeId];
-    if (infoWindow) {
-      Object.values(infoWindows).forEach(iw => iw.close());
-      infoWindow.open(map, marker);
-    }
+        marker.addListener("click", () => {
+            Object.values(infoWindows).forEach(iw => iw.close());
+            infoWindow.open(map, marker);
+        });
 
-    document.querySelectorAll('.place-item').forEach(item => {
-      item.classList.remove('highlighted');
+        markers[`ai-${index}`] = marker;
+        infoWindows[`ai-${index}`] = infoWindow;
     });
-    const placeItem = document.querySelector(`[data-place-id="${placeId}"]`);
-    if (placeItem) {
-      placeItem.classList.add('highlighted');
-      placeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// --- Display AI recommendations in the sidebar ---
+function displayAIRecommendations() {
+    const recommendations = {{ ai_recommendations|tojson|safe }};
+    const container = document.getElementById('ai-recommendations-list');
+    if (!container || recommendations.length === 0) return;
+
+    container.innerHTML = '';
+    recommendations.forEach((rec, index) => {
+        const recElement = document.createElement('div');
+        recElement.className = 'place-item mb-3 p-2 border rounded';
+        recElement.style.borderLeft = '4px solid #007bff';
+        recElement.style.backgroundColor = '#f8f9ff';
+
+        recElement.innerHTML = `
+            <div class="place-info">
+                <div class="place-name fw-bold" style="cursor:pointer;" onclick="focusOnMarker('ai-${index}')">
+                    <i class="fas fa-magic me-2 text-primary"></i>${rec.name}
+                </div>
+                <div class="place-address text-muted">{{ city }}</div>
+                <div class="place-summary text-secondary fst-italic mt-2 small">${rec.description}</div>
+            </div>
+            <div class="place-actions d-flex gap-2 align-items-center mt-2">
+                <button class="save-btn btn btn-sm btn-outline-primary" 
+                        data-place='${JSON.stringify({
+                            id: null,
+                            name: rec.name,
+                            address: rec.name + ', {{ city }}',
+                            city: "{{ city }}",
+                            latitude: rec.latitude,
+                            longitude: rec.longitude,
+                            editorial_summary: rec.description
+                        })}'
+                        onclick="savePlace(this)" 
+                        title="Save AI recommendation">★</button>
+            </div>
+        `;
+
+        container.appendChild(recElement);
+    });
+
+    addAIPlaceMarkers(recommendations);
+}
+
+function savePlace(buttonElement) {
+    const place = JSON.parse(buttonElement.dataset.place);
+    buttonElement.disabled = true;
+    buttonElement.style.opacity = '0.5';
+    fetch('/save_place', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(place)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.message) {
+            buttonElement.classList.add('saved');
+            buttonElement.title = 'Place saved!';
+            const cartCountElem = document.getElementById('cart-count');
+            if (cartCountElem) {
+                const currentCount = parseInt(cartCountElem.textContent) || 0;
+                cartCountElem.textContent = currentCount + 1;
+            }
+        } else {
+            alert(data.error || 'Error saving place');
+        }
+    })
+    .finally(() => {
+        buttonElement.disabled = false;
+        buttonElement.style.opacity = '1';
+    });
+}
+
+function focusOnMarker(id) {
+    const marker = markers[id];
+    if (marker) {
+        map.setCenter(marker.getPosition());
+        map.setZoom(16);
+        const infoWindow = infoWindows[id];
+        if (infoWindow) {
+            Object.values(infoWindows).forEach(iw => iw.close());
+            infoWindow.open(map, marker);
+        }
     }
-
-    marker.setAnimation(google.maps.Animation.BOUNCE);
-    setTimeout(() => {
-      marker.setAnimation(null);
-    }, 2000);
-  }
 }
 
-function createInfoWindowContent(place) {
-  const summary = place.editorial_summary || 'No description available';
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${place.location.lat},${place.location.lng}`;
-
-  return `
-    <div class="custom-info-window" style="font-size: 1rem;">
-        <div class="info-title fw-bold mb-1" style="font-size: 1.1rem;">${place.name}</div>
-        <div class="info-address text-muted mb-2" style="font-size: 0.95rem;">${place.address}</div>
-        <div class="info-summary mb-2" style="font-size: 0.95rem;">${summary}</div>
-        <div class="info-actions d-flex justify-content-between align-items-center">
-            <a href="${mapsUrl}" target="_blank" class="btn btn-sm btn-outline-primary" style="font-size: 0.9rem;">Open in Maps</a>
-        </div>
-    </div>
-  `;
-}
-
+// --- Google Places markers ---
 const locationsData = {{ places | tojson | safe }};
-
 function initMap() {
-  const mapElement = document.getElementById("map");
-  map = new google.maps.Map(mapElement, {
-    zoom: 12,
-    gestureHandling: 'greedy'
-  });
+    const mapElement = document.getElementById("map");
+    map = new google.maps.Map(mapElement, { zoom: 12, gestureHandling: 'greedy' });
+    const bounds = new google.maps.LatLngBounds();
 
-  const bounds = new google.maps.LatLngBounds();
+    locationsData.forEach(loc => {
+        if (loc && loc.location) {
+            const marker = new google.maps.Marker({
+                position: { lat: loc.location.lat, lng: loc.location.lng },
+                map: map,
+                title: loc.name,
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 0C6.7 0 0 6.7 0 15c0 11.25 15 25 15 25s15-13.75 15-25C30 6.7 23.3 0 15 0z" fill="#EA4335"/>
+                            <circle cx="15" cy="15" r="8" fill="white"/>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(30, 40),
+                    anchor: new google.maps.Point(15, 40)
+                }
+            });
 
-  locationsData.forEach(loc => {
-    if (loc && loc.location) {
-      const marker = new google.maps.Marker({
-        position: { lat: loc.location.lat, lng: loc.location.lng },
-        map: map,
-        title: loc.name,
-        icon: {
-          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-            <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15 0C6.7 0 0 6.7 0 15c0 11.25 15 25 15 25s15-13.75 15-25C30 6.7 23.3 0 15 0z" fill="#EA4335"/>
-              <circle cx="15" cy="15" r="8" fill="white"/>
-            </svg>
-          `),
-          scaledSize: new google.maps.Size(30, 40),
-          anchor: new google.maps.Point(15, 40)
+            const infoWindow = new google.maps.InfoWindow({ content: `<strong>${loc.name}</strong><br>${loc.address}` });
+            marker.addListener("click", () => { infoWindow.open(map, marker); });
+            markers[loc.place_id] = marker;
+            infoWindows[loc.place_id] = infoWindow;
+            bounds.extend(marker.getPosition());
         }
-      });
+    });
 
-      const infoWindow = new google.maps.InfoWindow({
-        content: createInfoWindowContent(loc)
-      });
-
-      marker.addListener("click", () => {
-        Object.values(infoWindows).forEach(iw => iw.close());
-        infoWindow.open(map, marker);
-
-        document.querySelectorAll('.place-item').forEach(item => item.classList.remove('highlighted'));
-        const placeItem = document.querySelector(`[data-place-id="${loc.place_id}"]`);
-        if (placeItem) {
-          placeItem.classList.add('highlighted');
-          placeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      });
-
-      markers[loc.place_id] = marker;
-      infoWindows[loc.place_id] = infoWindow;
-      bounds.extend(marker.getPosition());
+    if (locationsData.length > 0) {
+        map.fitBounds(bounds);
+        if (locationsData.length === 1) map.setZoom(15);
+    } else {
+        map.setCenter({ lat: 40.7128, lng: -74.0060 });
+        map.setZoom(12);
     }
-  });
-
-  if (locationsData.length > 0) {
-    map.fitBounds(bounds);
-    if (locationsData.length === 1) {
-      map.setZoom(15);
-    }
-  } else {
-    map.setCenter({ lat: 40.7128, lng: -74.0060 });
-    map.setZoom(12);
-  }
 }
 
 window.addEventListener('load', function() {
-  if (typeof google !== 'undefined' && google.maps) {
-    initMap();
-  }
+    if (typeof google !== 'undefined' && google.maps) {
+        initMap();
+        {% if ai_recommendations %} displayAIRecommendations(); {% endif %}
+    }
 });
 
+// --- Load cart_partial.html as a slide-out ---
 document.addEventListener("DOMContentLoaded", () => {
     const cartIcon = document.querySelector(".cart-icon");
     const cartContainer = document.getElementById("cart-panel-container");
@@ -245,17 +282,19 @@ function deletePlace(placeId, buttonElement) {
         .then(res => res.json())
         .then(data => {
             if (data.message) {
+                // Remove the card from the cart
                 const card = buttonElement.closest('.place-card');
                 card.style.transition = 'opacity 0.3s ease';
                 card.style.opacity = '0';
-
                 setTimeout(() => {
                     card.remove();
+                    // Update the cart count
                     const cartCountElem = document.getElementById('cart-count');
                     if (cartCountElem) {
                         const newCount = document.querySelectorAll('.place-card').length;
                         cartCountElem.textContent = newCount;
                     }
+                    // Show placeholder if no items left
                     const remainingCards = document.querySelectorAll('.place-card').length;
                     if (remainingCards === 0) {
                         const placesGrid = document.getElementById("places-grid");
@@ -271,7 +310,14 @@ function deletePlace(placeId, buttonElement) {
         .catch(() => alert("Error deleting place"));
 }
 
-
 </script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap"></script>
+
+<style>
+.place-item.highlighted { background-color: #fff3cd !important; border-color: #ffc107 !important; }
+.save-btn.saved { background-color: #28a745 !important; color: white !important; border-color: #28a745 !important; }
+.ai-recommendations-section { background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; }
+</style>
 {% endblock %}
