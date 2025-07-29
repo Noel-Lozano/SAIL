@@ -133,32 +133,37 @@ def itinerary():
         user_id = session['user_id']
         all_places = get_user_places(user_id=user_id)
 
-        dict_places = [place.__dict__ for place in all_places]
-        for place in dict_places: place.pop('_sa_instance_state')
-
-        itinerary = []
-        if start_date and end_date:
-            groupings, weather_prefs = generate_groupings(all_places, start_date, end_date)
-            weather_data = get_weather(all_places[0].city, start_date, end_date)
-            start_date = datetime.strptime(start_date, "%Y-%m-%d")
-            best_permutation = optimize_groupings(all_places, groupings, weather_prefs, weather_data, start_date)
-
-            unused_places = set(range(1, len(all_places) + 1)) - {place_id for day in best_permutation for place_id in day}
-            for i, day in enumerate(best_permutation):
-                date = start_date + timedelta(days=i)
-                itinerary.append({
-                    "date": date.strftime("%A, %B %d").replace(" 0", " "),
-                    "places": [dict_places[place_id - 1] for place_id in day]
-                })
-
-            if unused_places:
-                unused_places_list = [dict_places[place_id - 1] for place_id in unused_places]
-                itinerary.append({
-                    "date": "Unassigned",
-                    "places": unused_places_list
-                })
+        # Check if user has any places saved
+        if not all_places:
+            dict_places = []
+            itinerary = [{"date": "Unassigned", "places": []}]
         else:
-            itinerary = [{"date": "Unassigned", "places": dict_places}]
+            dict_places = [place.__dict__ for place in all_places]
+            for place in dict_places: place.pop('_sa_instance_state')
+
+            itinerary = []
+            if start_date and end_date:
+                groupings, weather_prefs = generate_groupings(all_places, start_date, end_date)
+                weather_data = get_weather(all_places[0].city, start_date, end_date)
+                start_date = datetime.strptime(start_date, "%Y-%m-%d")
+                best_permutation = optimize_groupings(all_places, groupings, weather_prefs, weather_data, start_date)
+
+                unused_places = set(range(1, len(all_places) + 1)) - {place_id for day in best_permutation for place_id in day}
+                for i, day in enumerate(best_permutation):
+                    date = start_date + timedelta(days=i)
+                    itinerary.append({
+                        "date": date.strftime("%A, %B %d").replace(" 0", " "),
+                        "places": [dict_places[place_id - 1] for place_id in day]
+                    })
+
+                if unused_places:
+                    unused_places_list = [dict_places[place_id - 1] for place_id in unused_places]
+                    itinerary.append({
+                        "date": "Unassigned",
+                        "places": unused_places_list
+                    })
+            else:
+                itinerary = [{"date": "Unassigned", "places": dict_places}]
 
         for day in itinerary:
             day['color'] = get_random_bold_color()
@@ -172,7 +177,7 @@ def itinerary():
     return render_template("build_itinerary.html",
                          itinerary=itinerary,
                          all_places=dict_places,
-                         start_date=start_date.strftime("%Y-%m-%d") if start_date else None,
+                         start_date=start_date.strftime("%Y-%m-%d") if isinstance(start_date, datetime) else start_date,
                          end_date=end_date,
                          saved_itineraries=saved_itineraries,
                          itinerary_name=itinerary_name,
