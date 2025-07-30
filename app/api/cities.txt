@@ -1,0 +1,681 @@
+Aba
+Abidjan
+Abobo
+Abu Dhabi
+Abuja
+Accra
+Adana
+Addis Ababa
+Adelaide
+Aden
+Agra
+Ahmedabad
+Ahvaz
+Aleppo
+Algiers
+Almaty
+Amman
+Amritsar
+Ankang
+Ankara
+Anqing
+Anshan
+Anshun
+Antalya
+Antananarivo
+Anyang
+Arequipa
+Ashgabat
+Astana
+Auckland
+Aurangabad
+Baghdad
+Baicheng
+Baise
+Baiyin
+Baku
+Balıkesir
+Bamako
+Bandar Lampung
+Bangkok
+Baoding
+Baoji
+Baoshan
+Baotou
+Barcelona
+Barquisimeto
+Barranquilla
+Basra
+Batam
+Bayannur
+Bazhong
+Beihai
+Beijing
+Beiliu
+Beirut
+Bekasi
+Belgrade
+Belo Horizonte
+Belém
+Bengaluru
+Bengbu
+Benin City
+Benxi
+Berlin
+Bhopal
+Bijie
+Binhai New Area
+Binzhou
+Birmingham
+Bishkek
+Biên Hòa
+Bogotá
+Bosaso
+Bozhou
+Brasília
+Brazzaville
+Brisbane
+Brooklyn
+Brussels-Capital Region
+Bucharest
+Budapest
+Budta
+Buenos Aires
+Bursa
+Busan
+Cairo
+Calgary
+Cali
+Caloocan
+Camayenne
+Campinas
+Cangzhou
+Cape Town
+Caracas
+Casablanca
+Chandigarh
+Changchun
+Changde
+Changsha
+Changshu City
+Changwon
+Changzhi
+Changzhou
+Chaoyang
+Chaozhou
+Chelyabinsk
+Chengde
+Chengdu
+Chennai
+Chenzhou
+Chiang Mai
+Chicago
+Chifeng
+Chittagong
+Chizhou
+Chongqing
+Chongqing Shi
+Chongzuo
+Chuadanga
+Chuzhou
+City of Belgrade
+City of Cape Town
+Ciudad Juárez
+Ciudad Nezahualcóyotl
+Cologne
+Conakry
+Curitiba
+Córdoba
+Cần Thơ
+Da Nang
+Daegu
+Daejeon
+Dakar
+Dalian
+Dallas
+Damascus
+Dandong
+Daqing
+Dar es Salaam
+Datong
+Davanagere
+Davao City
+Dazhou
+Delhi
+Denizli
+Depok
+Deyang
+Dezhou
+Dhaka
+Dhanbad
+Dingxi
+Diyarbakır
+Doha
+Dombivli
+Dongguan
+Dongying
+Douala
+Dubai
+Dushanbe
+Edmonton
+Enugu
+Ezhou
+Faisalabad
+Fangchenggang
+Faridabad
+Fez
+Fortaleza
+Foshan
+Freetown
+Fukuoka
+Fushun
+Fuxin
+Fuyang
+Fuzhou
+Ganzhou
+Garoua
+Gaziantep
+Gazipur Sadar Upazila
+Ghaziabad
+Giza
+Goiânia
+Goyang
+Greater London
+Greater Rio de Janeiro
+Guadalajara
+Guadalajara metropolitan area
+Guang'an
+Guangyuan
+Guangzhou
+Guarulhos
+Guayaquil
+Guigang
+Guilin
+Guiping
+Guiyang
+Gujranwala
+Gustavo A. Madero
+Guwahati
+Guyuan
+Gwalior
+Gwangju
+Haidong
+Haikou
+Haiphong
+Hamburg
+Handan
+Hangzhou
+Hanoi
+Hanzhong
+Harare
+Harbin
+Havana
+Hebi
+Hechi
+Hefei
+Heihe
+Hengshui
+Hengyang
+Heyuan
+Heze
+Hezhou
+Hiroshima
+Ho Chi Minh City
+Hohhot
+Hong Kong
+Houston
+Howrah
+Huai'an
+Huaibei
+Huaihua
+Huainan
+Huanggang
+Huangshan
+Huangshi
+Huizhou
+Huludao
+Hulunbuir
+Huzhou
+Huế
+Hyderabad
+Ibadan
+Incheon
+Indore
+Irbid
+Isfahan
+Islamabad
+Istanbul
+Iztapalapa de Cuitláhuac
+Jabalpur
+Jaipur
+Jakarta
+Jamshedpur
+Jeddah
+Ji'an
+Jiamusi
+Jiangmen
+Jiaozuo
+Jiaxing
+Jieyang
+Jilin City
+Jinan
+Jincheng
+Jingdezhen
+Jingmen
+Jingzhou
+Jinhua
+Jining
+Jinzhong
+Jinzhou
+Jiujiang
+Jiuquan
+Jixi
+Johannesburg
+Kabul
+Kaifeng
+Kalyan
+Kampala
+Kananga
+Kano
+Kanpur
+Kansas City metropolitan area
+Kaohsiung
+Karachi
+Karaj
+Kawasaki
+Kayseri
+Kazan
+Keraniganj Upazila
+Kharkiv
+Khartoum
+Kigali
+Kinshasa
+Kisangani
+Kobe
+Kocaeli Province
+Kolkata
+Konya
+Konya Province
+Kowloon
+Krasnodar
+Krasnoyarsk
+Kuala Lumpur
+Kumasi
+Kunming
+Kuwait City
+Kyiv
+Kyoto
+Lagos
+Laibin
+Langfang
+Lanzhou
+Leiyang
+Leshan
+León de Los Aldama
+Liangshan Yi Autonomous Prefecture
+Lianyungang
+Liaocheng
+Liaoyang
+Lijiang
+Lima
+Lincang
+Linfen
+Linyi
+Lishui
+Liupanshui
+Liuzhou
+Lomé
+London
+Longnan
+Longyan
+Los Angeles
+Loudi
+Lu'an
+Luanda
+Lubumbashi
+Lucknow
+Ludhiana
+Luohe
+Luoyang
+Lusaka
+Luzhou
+Lüliang
+Ma'anshan
+Maceió
+Madrid
+Madrid city
+Madurai
+Maiduguri
+Makassar
+Malingao
+Manaus
+Mandalay
+Manhattan
+Manila
+Maoming
+Maputo
+Maracaibo
+Maracay
+Marrakesh
+Mashhad
+Masvingo
+Matola
+Mbuji-Mayi
+Mecca
+Medan
+Medellín
+Medina
+Meerut
+Meishan
+Meizhou
+Melbourne
+Mersin
+Metro Vancouver Regional District
+Metropolitan City of Bari
+Metropolitan City of Bologna
+Metropolitan City of Catania
+Metropolitan City of Milan
+Metropolitan City of Naples
+Metropolitan City of Palermo
+Metropolitan City of Turin
+Mexico City
+Mianyang
+Milan
+Minsk
+Mogadishu
+Mombasa
+Monrovia
+Monterrey
+Montevideo
+Montreal
+Moscow
+Mosul
+Mudanjiang
+Multan
+Mumbai
+Munich
+Murang'a
+Muscat
+N'Djamena
+Nabarangpur
+Nagoya
+Nagpur
+Nairobi
+Najafgarh
+Nanchang
+Nanchong
+Nanjing
+Nanning
+Nanping
+Nantong
+Nanyang
+Narayanganj Sadar Upazila
+Nashik
+National Capital Region
+Navi Mumbai
+Navsari
+Naypyidaw
+Neijiang
+New Cairo
+New Taipei
+New York City
+Niamey
+Ningbo
+Ningde
+Nizhny Novgorod
+North East Delhi district
+Nouakchott
+Novosibirsk
+Odesa
+Ogbomosho
+Omdurman
+Omsk
+Onitsha
+Ordos City
+Osaka
+Ottawa
+Ouagadougou
+Palembang
+Panama City
+Panjin
+Panzhihua
+Paris
+Patna
+Perm
+Perth
+Peshawar
+Philadelphia
+Phnom Penh
+Phoenix
+Pimpri
+Pimpri-Chinchwad
+Pingdingshan
+Pingliang
+Pingxiang
+Pizhou
+Pointe-Noire
+Port Harcourt
+Port-au-Prince
+Porto Alegre
+Prague
+Prayagraj
+Pu'er City
+Pudong
+Puebla City
+Pune
+Putian
+Puyang
+Pyongyang
+Qingdao
+Qingyang
+Qingyuan
+Qinhuangdao
+Qinzhou
+Qiqihar
+Qom
+Quanzhou
+Queens
+Quetta
+Quezon City
+Quito
+Qujing
+Quzhou
+Raipur
+Rajkot
+Ranchi
+Randstad
+Recife
+Rio de Janeiro
+Riyadh
+Rizhao
+Rome
+Rosario
+Rostov-on-Don
+Rui'an
+Saint Petersburg
+Saitama
+Salvador
+Samara
+Samsun
+San Antonio
+San Cristóbal Ecatepec
+San Diego
+San Jose
+Sanaa
+Sanmenxia
+Sanming
+Santa Cruz de la Sierra
+Santiago
+Santiago de los Caballeros
+Santo Domingo
+Sanya
+Sapporo
+Savar Upazila
+Semarang
+Sendai
+Seoul
+Shanghai
+Shangluo
+Shangqiu
+Shangrao
+Shantou
+Shaoguan
+Shaoxing
+Shaoyang
+Sharjah
+Shenyang
+Shenzhen
+Shijiazhuang
+Shiraz
+Shivaji Nagar
+Shiyan
+Shobra Elkhema
+Shuangyashan
+Shuozhou
+Shymkent
+Singapore
+Siping
+Sofia
+South Tangerang
+Soweto
+Srinagar
+Suihua
+Suining
+Suizhou
+Suqian
+Surabaya
+Surat
+Suwon
+Suzhou
+Sydney
+São Luís
+São Paulo
+Tabriz
+Taguig
+Tai'an
+Taichung
+Tainan
+Taipei
+Taiyuan
+Taizhou
+Tangerang
+Tangier
+Tangshan
+Taoyuan
+Tashkent
+Tbilisi
+Tehran
+Thane
+The Bronx
+Tianjin
+Tianshui
+Tieling
+Tijuana
+Tokyo
+Tonghua
+Tongliao
+Tongling
+Tongren
+Toronto
+Tripoli
+Trujillo
+Tshikapa
+Ufa
+Ulaanbaatar
+Ulanqab
+Ulsan
+Vadodara
+Valencia
+Van
+Varanasi
+Vasai-Virar
+Vienna
+Vientiane
+Vijayawada
+Visakhapatnam
+Volgograd
+Voronezh
+Warsaw
+Weifang
+Weihai
+Weinan
+Wenling
+Wenzhou
+Wuhan
+Wuhu
+Wuwei
+Wuxi
+Wuzhong
+Wuzhou
+Xi'an
+Xiamen
+Xiangtan
+Xiangyang
+Xianning
+Xianyang
+Xiaogan
+Xingtai
+Xining
+Xinxiang
+Xinyang
+Xinyu
+Xinzhou
+Xuancheng
+Xuchang
+Xuzhou
+Ya'an
+Yan'an
+Yancheng
+Yangjiang
+Yangon
+Yangquan
+Yangzhou
+Yantai
+Yaoundé
+Yekaterinburg
+Yerevan
+Yibin
+Yichang
+Yichun
+Yinchuan
+Yingkou
+Yingtan
+Yiyang
+Yokohama
+Yongin
+Yongzhou
+Yopougon
+Yueqing
+Yueyang
+Yulin
+Yuncheng
+Yunfu
+Yuxi
+Yuyao City
+Zamboanga City
+Zaozhuang
+Zapopan
+Zhangjiajie
+Zhangjiakou
+Zhangye
+Zhangzhou
+Zhanjiang
+Zhaoqing
+Zhaotong
+Zhengzhou
+Zhenjiang
+Zhongshan
+Zhongwei
+Zhoukou
+Zhoushan
+Zhuhai
+Zhumadian
+Zhuzhou
+Zibo
+Zigong
+Ziyang
+Zunyi
+Ürümqi
+Đồng Nai
+İzmir
+Şanlıurfa

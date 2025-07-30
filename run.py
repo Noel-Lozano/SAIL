@@ -3,9 +3,14 @@ from flask_sqlalchemy import SQLAlchemy
 from app.models.models import db, User, Search, Place, Itinerary
 from app.models.db_utils import create_user, validate_user_login, save_search, get_user_searches, clear_user_searches
 from app.routes.map_display import map_display_bp
+from app.api.map_api import get_city_preview
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+import random
+
+with open("app/api/cities.txt", "r", encoding="utf-8") as f:
+    POPULAR_CITIES = [line.strip() for line in f if line.strip()]
 
 load_dotenv()
 
@@ -32,7 +37,11 @@ with app.app_context():
 def index():
     if 'user' not in session:
         return redirect(url_for('login'))
-    return render_template('home.html')
+    sample_cities = random.sample(POPULAR_CITIES, 6) 
+    city_cards = [get_city_preview(city) for city in sample_cities]
+    city_cards = [card for card in city_cards if card]  
+
+    return render_template("home.html", city_cards=city_cards)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
