@@ -68,11 +68,19 @@
   <nav class="navbar navbar-expand-lg custom-navbar px-3 shadow-sm">
         <a class="navbar-brand travelbot-brand" href="{{ url_for('index') }}">𓊝 Sail</a>
 
-        <div class="ms-auto navbar-nav">
-            <span class="nav-link">Browse</span> <!--Placeholder (WIP)-->
+        <div class="ms-auto me-5 navbar-nav">
             {% if session.get('user') %}
-            <span class="nav-link">Saved Plans</span> <!--Placeholder (WIP)-->
-            <a class="nav-link" href="{{ url_for('logout') }}">Logout ({{ session['user'] }})</a>
+            <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+            <a class="nav-link" href="{{ url_for('map_display.planning') }}">Plan</a>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    {{ session['user'] }}
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('profile.profile') }}">Profile</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </li>
             {% else %}
             <a class="nav-link" href="{{ url_for('login') }}">Login</a>
             <a class="nav-link" href="{{ url_for('register') }}">Register</a>
