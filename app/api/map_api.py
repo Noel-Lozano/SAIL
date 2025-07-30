@@ -109,3 +109,38 @@ def get_places_from_city(city, place, page_n = 1):
         print(f"DEBUG: Exception occurred: {e}")
     
     return []
+
+def get_city_preview(city_name):
+    url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
+    params = {
+        "query": city_name,
+        "key": BACKEND_MAP_API 
+    }
+
+    response = requests.get(url, params=params)
+    if response.status_code != 200:
+        print(f"Failed to fetch info for {city_name}")
+        return None
+
+    data = response.json()
+    results = data.get("results")
+    if not results:
+        return None
+
+    place = results[0]
+    name = place.get("name")
+    address = place.get("formatted_address")
+    photos = place.get("photos")
+
+    if not photos:
+        return None 
+
+    photo_ref = photos[0].get("photo_reference")
+    photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_ref}&key={BACKEND_MAP_API}"
+
+    return {
+        "name": name,
+        "address": address,
+        "photo_url": photo_url,
+        "city_query": city_name
+    }

@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}Search Dashboard{% endblock %}
+{% block title %}Home{% endblock %}
 {% block content %}
 <h2 style="margin-top:2rem;">Welcome, {{ session.user }}!</h2>
 <p>Search a city or destination.</p>
@@ -10,4 +10,41 @@
     <button type="submit" class="btn btn-primary">Plan Trip</button>
   </div>
 </form>
+
+{% if city_cards %}
+  <h3 class="mt-5">Popular Cities</h3>
+  <div id="cityCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-inner">
+      {% for chunk in city_cards|batch(3, '') %}
+      <div class="carousel-item {% if loop.first %}active{% endif %}">
+        <div class="row">
+          {% for city in chunk %}
+          {% if city %}
+          <div class="col-md-4">
+            <div class="card h-100 d-flex flex-column mb-3">
+              <a href="{{ url_for('map_display.planning') }}?city={{ city.city_query }}">
+                <img src="{{ city.photo_url }}" class="card-img-top" alt="{{ city.name }}" style="height: 300px; object-fit: cover;">
+              </a>
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ city.name }}</h5>
+                <p class="card-text mt-auto"><small class="text-muted">{{ city.address }}</small></p>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#cityCarousel" data-bs-slide="prev" style="top: -20%; left: -5%">
+      <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#cityCarousel" data-bs-slide="next" style="top: -20%; right: -5%">
+      <span class="carousel-control-next-icon"></span>
+    </button>
+  </div>
+{% else %}
+  <p class="mt-5">No popular cities available at the moment.</p>
+{% endif %}
 {% endblock %}
