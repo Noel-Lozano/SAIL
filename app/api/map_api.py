@@ -90,7 +90,7 @@ def get_places_from_city(city, place, page_n = 1):
     headers = {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": BACKEND_MAP_API,
-        "X-Goog-FieldMask": "places.id,places.displayName,places.location,places.formattedAddress,places.rating,places.userRatingCount,places.editorialSummary,places.googleMapsUri,nextPageToken"
+        "X-Goog-FieldMask": "places.id,places.displayName,places.location,places.formattedAddress,places.rating,places.userRatingCount,places.editorialSummary,places.googleMapsUri,nextPageToken,places.regularOpeningHours"
     }
     
     try:
