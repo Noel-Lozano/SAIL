@@ -20,9 +20,10 @@ SAIL is an intelligent travel planning web app that generates **personalized iti
 - **Database:** SQLite
 - **AI & APIs:**
   - Google Generative AI (Gemini) — for activity recommendation logic
-  - Google Maps API — for location data & previews
-  - OpenWeather API — for real-time weather data
+  - Google Places API — for location data & previews
+  - Weather API — for real-time weather data
   - populartimes — for peak hours and popularity insights
+  - GeoDB Cities API — for generating popular city suggestions
 
 ## 🚀 Getting Started
 
